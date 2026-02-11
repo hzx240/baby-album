@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build outputs
+dist/
+frontend/dist/
+backend/dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+frontend/.env
+backend/.env
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# Test coverage
+coverage/
+frontend/coverage/
+backend/coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

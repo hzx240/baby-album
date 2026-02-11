@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String   @map("password_hash")
+  displayName     String?  @map("display_name")
+  avatarUrl       String?  @map("avatar_url")
+  familyId        String?  @map("family_id")  // 一个用户只能属于一个家庭
+  status          String   @default("ACTIVE")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  family          Family?            @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  memberOf        FamilyMember[]     @relation("FamilyMember")
+  invitations     FamilyInvitation[] @relation("InviterInvitations")
+  uploadedPhotos  Photo[]            @relation("PhotoUploader")
+  refreshTokens   RefreshToken[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+// 家庭表
+model Family {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  users        User[]           // 一个家庭可以有多个用户（父母等）
+  members      FamilyMember[]   // 家庭成员关系
+  invitations  FamilyInvitation[] // 家庭邀请
+  children     Child[]
+  photos       Photo[]
+
+  @@map("families")
+}
+
+// 家庭成员表
+model FamilyMember {
+  id        String   @id @default(uuid())
+  familyId  String   @map("family_id")
+  userId    String   @map("user_id")
+  role      String   @default("MEMBER")  // OWNER, ADMIN, MEMBER, VIEWER
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  // 关系
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation("FamilyMember", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, userId])
+  @@index([familyId])
+  @@index([userId])
+  @@map("family_members")
+}
+
+// 家庭邀请表
+model FamilyInvitation {
+  id         String   @id @default(uuid())
+  familyId   String   @map("family_id")
+  inviterId  String   @map("inviter_id")
+  token      String   @unique
+  role       String   @default("MEMBER")  // OWNER, ADMIN, MEMBER, VIEWER
+  email      String?  // 可选：邀请的邮箱（用于预填）
+  expiresAt  DateTime @map("expires_at")
+  usedAt     DateTime? @map("used_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 关系
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  inviter  User   @relation("InviterInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("family_invitations")
+}
+
+// 宝贝/孩子表
+model Child {
+  id        String   @id @default(uuid())
+  familyId  String   @map("family_id")
+  name      String
+  avatar    String?
+  birthDate DateTime? @map("birth_date")
+  gender    String?  // MALE, FEMALE, OTHER
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  family Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  photos Photo[]
+
+  @@map("children")
+}
+
+// 照片表
+model Photo {
+  id          String    @id @default(uuid())
+  familyId    String    @map("family_id")
+  childId     String?   @map("child_id")  // 照片可以关联到某个孩子
+  uploaderId  String    @map("uploader_id")
+  originalKey String    @map("original_key")
+  resizedKey  String?   @map("resized_key")
+  thumbKey    String?   @map("thumb_key")
+  takenAt     DateTime? @map("taken_at")
+  uploadedAt  DateTime  @default(now()) @map("uploaded_at")
+  checksum    String?
+  fileSize    Int?      @map("file_size")
+  mimeType    String?   @map("mime_type")
+
+  // 关系
+  family   Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child    Child?  @relation(fields: [childId], references: [id], onDelete: SetNull)
+  uploader User    @relation("PhotoUploader", fields: [uploaderId], references: [id])
+  tags     PhotoTag[]
+
+  @@index([familyId, uploadedAt(sort: Desc)])
+  @@index([familyId, takenAt(sort: Desc)])
+  @@index([childId, uploadedAt(sort: Desc)])
+  @@index([childId, takenAt(sort: Desc)])
+  @@map("photos")
+}
+
+// 照片标签表
+model PhotoTag {
+  photoId String @map("photo_id")
+  tag     String
+
+  // 关系
+  photo Photo @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@id([photoId, tag])
+  @@map("photo_tags")
+}
+
+// Refresh Token 表
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  // 关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// 审计日志表
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  targetId  String?  @map("target_id")
+  ip        String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId(sort: Desc), createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
