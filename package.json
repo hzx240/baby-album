@@ -1,0 +1,20 @@
+{
+  "name": "baby-album",
+  "version": "1.0.0",
+  "description": "Baby Album App",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node tests/auth-test.js",
+    "test:quick": "node tests/quick-test.js",
+    "test:auth": "node tests/auth-test.js",
+    "test:photos": "node tests/regression-test.js --photos-only",
+    "backend": "cd backend && npm run start:dev",
+    "frontend": "cd frontend && npm run dev",
+    "postinstall": "cd backend && npx prisma generate",
+    "db:push": "cd backend && npx prisma db push",
+    "setup": "node scripts/setup-hooks.js"
+  }
+}

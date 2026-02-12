@@ -234,6 +234,7 @@ export default function PhotoViewer({
               transition: isDragging ? 'none' : 'transform 0.3s ease-out',
             }}
             draggable={false}
+            loading="lazy"
           />
         </div>
 

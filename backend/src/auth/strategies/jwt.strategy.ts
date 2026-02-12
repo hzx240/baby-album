@@ -2,10 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CacheService } from '../../common/cache.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -14,18 +18,29 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: {
-        id: true,
-        email: true,
-        status: true,
-        familyId: true,
-      },
-    });
+    const cacheKey = `user:${payload.sub}`;
 
-    if (!user || user.status !== 'ACTIVE') {
-      throw new UnauthorizedException('用户不存在或已被禁用');
+    // Try to get from cache first
+    let user = this.cache.get(cacheKey);
+
+    if (!user) {
+      // Cache miss - query database
+      user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: {
+          id: true,
+          email: true,
+          status: true,
+          familyId: true,
+        },
+      });
+
+      if (!user || user.status !== 'ACTIVE') {
+        throw new UnauthorizedException('用户不存在或已被禁用');
+      }
+
+      // Cache for 60 seconds
+      this.cache.set(cacheKey, user, 60000);
     }
 
     return {

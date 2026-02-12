@@ -133,6 +133,7 @@ model Photo {
   @@index([familyId, takenAt(sort: Desc)])
   @@index([childId, uploadedAt(sort: Desc)])
   @@index([childId, takenAt(sort: Desc)])
+  @@index([familyId, checksum])
   @@map("photos")
 }
 
