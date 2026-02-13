@@ -11,15 +11,20 @@ async function request(method, endpoint, data, token) {
   return new Promise((resolve, reject) => {
     const url = `${API_BASE}${endpoint}`;
 
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const options = {
       hostname: 'localhost',
       port: 3001,
       path: url.split('/')[3] || '',
       method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : undefined
-      }.filter(Boolean)
+      headers: headers
     };
 
     if (data) {

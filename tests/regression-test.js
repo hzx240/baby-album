@@ -65,6 +65,12 @@ function httpRequest(method, path, data, token = null, timeout = CONFIG.TIMEOUT)
   });
 }
 
+function assert(condition, testName, errorMessage) {
+  if (!condition) {
+    throw new Error(`${testName} failed: ${errorMessage}`);
+  }
+}
+
 function log(test, status, message) {
   const icon = status === '✅' ? '✅' : status === '❌' ? '❌' : status === '⚠️' ? '⚠️' : 'ℹ️';
   console.log(`${icon} [${test}] ${message}`);
@@ -382,26 +388,28 @@ if (require.main === module) {
   const authOnly = args.includes('--auth-only');
   const photosOnly = args.includes('--photos-only');
 
-  if (authOnly) {
-    console.log('\n🔐 仅运行认证测试...\n');
-    const authData = await tests.auth();
-    console.log('\n✅ 认证测试完成！');
-    process.exit(0);
-  }
+  (async () => {
+    if (authOnly) {
+      console.log('\n🔐 仅运行认证测试...\n');
+      const authData = await tests.auth();
+      console.log('\n✅ 认证测试完成！');
+      process.exit(0);
+    }
 
-  if (photosOnly) {
-    console.log('\n🔐 仅运行照片测试...\n');
-    const authData = await tests.auth();
-    await tests.photos(authData.token, authData.familyId, authData.childId);
-    console.log('\n✅ 照片测试完成！');
-    process.exit(0);
-  }
+    if (photosOnly) {
+      console.log('\n🔐 仅运行照片测试...\n');
+      const authData = await tests.auth();
+      await tests.photos(authData.token, authData.familyId, authData.childId);
+      console.log('\n✅ 照片测试完成！');
+      process.exit(0);
+    }
 
-  if (quickMode) {
-    console.log('\n⚡ 快速模式（跳过性能测试）...\n');
-  }
+    if (quickMode) {
+      console.log('\n⚡ 快速模式（跳过性能测试）...\n');
+    }
 
-  runAllTests();
+    await runAllTests();
+  })();
 }
 
 module.exports = { tests, httpRequest };
