@@ -14,6 +14,10 @@ import { FamilyMembersModule } from './members/members.module';
 import { FamilyInvitationsModule } from './invitations/invitations.module';
 import { AuditModule } from './audit/audit.module';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
+import { FamilyContextInterceptor } from './common/interceptors/family-context.interceptor';
+import { RedisModule } from './redis/redis.module';
+import { EnvValidationService } from './common/env-validation.service';
+import { FileValidationService } from './common/file-validation.service';
 
 @Module({
   imports: [
@@ -34,10 +38,13 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     FamilyMembersModule,
     FamilyInvitationsModule,
     AuditModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    EnvValidationService,
+    FileValidationService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
@@ -49,6 +56,10 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditLogInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: FamilyContextInterceptor,
     },
   ],
 })

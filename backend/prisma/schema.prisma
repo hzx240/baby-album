@@ -30,6 +30,8 @@ model User {
   refreshTokens   RefreshToken[]
   auditLogs       AuditLog[]
 
+  @@index([email])
+  @@index([status])
   @@map("users")
 }
 
@@ -47,6 +49,7 @@ model Family {
   children     Child[]
   photos       Photo[]
 
+  @@index([createdAt(sort: Desc)])
   @@map("families")
 }
 
@@ -105,6 +108,8 @@ model Child {
   family Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
   photos Photo[]
 
+  @@index([familyId])
+  @@index([familyId, createdAt(sort: Desc)])
   @@map("children")
 }
 
@@ -160,6 +165,9 @@ model RefreshToken {
   // 关系
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
   @@map("refresh_tokens")
 }
 
