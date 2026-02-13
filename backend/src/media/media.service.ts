@@ -18,6 +18,7 @@ import { RequestUploadDto } from './dto/request-upload.dto';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
 import { QueryMediaDto } from './dto/query-media.dto';
 import { QueueService } from '../common/queue.service';
+import { FileValidationService } from '../common/file-validation.service';
 
 @Injectable()
 export class MediaService {
@@ -27,6 +28,7 @@ export class MediaService {
     private prisma: PrismaService,
     private s3Config: S3Config,
     private queue: QueueService,
+    private fileValidator: FileValidationService,
   ) {
     this.queue.registerQueue(this.IMAGE_PROCESSING_QUEUE);
   }
@@ -205,11 +207,58 @@ export class MediaService {
       const response = await this.s3Config.getClient().send(getObjectCommand);
       const originalBuffer = await this.streamToBuffer(response.Body);
 
-      // Parallel image processing with Sharp
+      // 🔒 SECURITY: Validate file type using magic numbers
+      // This prevents malicious file uploads with fake MIME types
+      try {
+        this.fileValidator.validateFileByMagicNumber(
+          originalBuffer,
+          dto.contentType as RequestUploadDto['contentType'],
+        );
+      } catch (error) {
+        // Delete invalid file from S3
+        await this.s3Config.getClient().send(
+          new DeleteObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: originalKey,
+          }),
+        );
+        throw error;
+      }
+
+      // 🔒 SECURITY: Verify it's a valid image using Sharp
       const image = sharp(originalBuffer);
-      const [metadata, resizedBuffer, thumbnailBuffer] = await Promise.all([
-        image.metadata(),
-        image
+      const metadata = await image.metadata();
+
+      // Verify format matches declared content type
+      const formatToMimeType: Record<string, string> = {
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        webp: 'image/webp',
+        heif: 'image/heic',
+        heic: 'image/heic',
+      };
+
+      const detectedMimeType = formatToMimeType[metadata.format || ''];
+
+      if (!detectedMimeType || detectedMimeType !== dto.contentType) {
+        // Delete invalid file from S3
+        await this.s3Config.getClient().send(
+          new DeleteObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: originalKey,
+          }),
+        );
+
+        throw new BadRequestException(
+          `Image format mismatch: declared ${dto.contentType}, detected ${detectedMimeType || 'unknown'}`,
+        );
+      }
+
+      // Parallel image processing with Sharp
+      const processImage = sharp(originalBuffer);
+      const [processMetadata, resizedBuffer, thumbnailBuffer] = await Promise.all([
+        processImage.metadata(),
+        processImage
           .clone()
           .resize(1920, 1920, {
             fit: 'inside',
@@ -217,7 +266,7 @@ export class MediaService {
           })
           .jpeg({ quality: 85 })
           .toBuffer(),
-        image
+        processImage
           .clone()
           .resize(400, 400, {
             fit: 'inside',

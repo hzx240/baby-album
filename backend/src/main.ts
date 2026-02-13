@@ -2,9 +2,25 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { EnvValidationService } from './common/env-validation.service';
+import { Logger } from '@nestjs/common';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
+
+  // 🔒 SECURITY: Request size limits to prevent DoS attacks
+  // Limit JSON body size
+  app.use(express.json({
+    limit: process.env.MAX_JSON_SIZE || '10mb',
+  }));
+
+  // Limit URL-encoded body size
+  app.use(express.urlencoded({
+    limit: process.env.MAX_URL_ENCODED_SIZE || '10mb',
+    extended: true,
+  }));
 
   // 启用 CORS
   app.enableCors({
@@ -22,6 +38,16 @@ async function bootstrap() {
 
   // 全局异常过滤器
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // 启用环境验证（在应用启动时检查配置）
+  try {
+    const envValidation = app.get(EnvValidationService);
+    await envValidation.onModuleInit();
+  } catch (error) {
+    logger.error('❌ Environment validation failed:');
+    logger.error(error.message);
+    process.exit(1); // Exit if environment is invalid
+  }
 
   // 全局验证管道
   app.useGlobalPipes(

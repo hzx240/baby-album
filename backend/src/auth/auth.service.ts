@@ -4,12 +4,14 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { CacheService } from '../redis/cache.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private cacheService: CacheService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -209,12 +211,33 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string) {
-    // 撤销所有 refresh tokens
+  async logout(userId: string, token?: string) {
+    // If access token provided, blacklist it
+    if (token) {
+      try {
+        // Decode token to get remaining time
+        const decoded = this.jwtService.decode(token);
+        if (decoded && decoded.exp) {
+          const ttl = Math.floor(decoded.exp - Date.now() / 1000);
+          if (ttl > 0) {
+            // Blacklist for remaining token lifetime
+            await this.cacheService.addToBlacklist(token, ttl);
+          }
+        }
+      } catch (error) {
+        // If we can't decode the token, just continue
+        console.warn('Failed to decode token during logout:', error.message);
+      }
+    }
+
+    // Revoke all refresh tokens
     await this.prisma.refreshToken.updateMany({
       where: { userId },
       data: { revokedAt: new Date() },
     });
+
+    // Invalidate user cache
+    await this.cacheService.invalidateUser(userId);
 
     return { message: '登出成功' };
   }

@@ -1,27 +1,37 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CacheService } from '../../common/cache.service';
+import { CacheService } from '../../redis/cache.service';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private prisma: PrismaService,
     private cache: CacheService,
+    configService: ConfigService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+      secretOrKey: configService.getOrThrow('JWT_SECRET'),
+      passReqToCallback: true, // Pass request to validate
     });
   }
 
-  async validate(payload: any) {
+  async validate(request: Request, payload: any) {
+    // P0 FIX: Check if token is blacklisted (logged out)
+    const token = this.extractToken(request);
+    if (token && await this.cache.isBlacklisted(token)) {
+      throw new UnauthorizedException('Token has been revoked');
+    }
+
     const cacheKey = `user:${payload.sub}`;
 
     // Try to get from cache first
-    let user = this.cache.get(cacheKey);
+    let user = await this.cache.getUser(cacheKey);
 
     if (!user) {
       // Cache miss - query database
@@ -39,8 +49,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException('用户不存在或已被禁用');
       }
 
-      // Cache for 60 seconds
-      this.cache.set(cacheKey, user, 60000);
+      // Cache for 10 minutes using CacheService helper
+      await this.cache.setUser(payload.sub, user);
     }
 
     return {
@@ -49,5 +59,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: user.email,
       familyId: user.familyId,
     };
+  }
+
+  private extractToken(request: any): string | null {
+    if (!request) {
+      return null;
+    }
+    const authHeader = request.headers?.authorization;
+    if (!authHeader) {
+      return null;
+    }
+    const [, token] = authHeader.split(' ');
+    return token || null;
   }
 }
