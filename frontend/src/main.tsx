@@ -13,6 +13,12 @@ import PhotoDetailPage from './pages/family/PhotoDetailPage'
 import MembersPage from './pages/family/MembersPage'
 import AcceptInvitePage from './pages/family/AcceptInvitePage'
 import ProtectedRoute from './components/ProtectedRoute'
+import { initCsrfToken } from './lib/api-client'
+
+// Initialize CSRF token on app startup
+initCsrfToken().catch((error) => {
+  console.error('Failed to initialize CSRF token:', error);
+});
 
 // Create a client
 const queryClient = new QueryClient({
