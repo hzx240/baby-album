@@ -11,6 +11,7 @@ import {
   UploadedFile,
   Res,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -57,6 +58,37 @@ export class GrowthController {
 
     const csvContent = file.buffer.toString('utf-8');
     return this.growthService.importFromCSV(childId, familyId, csvContent);
+  }
+
+  @Get('who-standards')
+  getWHOStandards(
+    @Query('measurementType') measurementType: 'height' | 'weight' | 'headCirc',
+    @Query('gender') gender: 'male' | 'female',
+    @Query('ageMonths') ageMonths: string,
+  ) {
+    const ageMonthsNum = parseInt(ageMonths, 10);
+    if (isNaN(ageMonthsNum) || ageMonthsNum < 0) {
+      throw new BadRequestException('Invalid ageMonths parameter');
+    }
+
+    return this.growthService.getWHOStandards(measurementType, gender, ageMonthsNum);
+  }
+
+  @Get('milestones')
+  getDevelopmentalMilestones(
+    @Query('category') category: 'motor' | 'language' | 'social' | 'cognitive',
+    @Query('ageMonths') ageMonths: string,
+  ) {
+    const ageMonthsNum = parseInt(ageMonths, 10);
+    if (isNaN(ageMonthsNum) || ageMonthsNum < 0) {
+      throw new BadRequestException('Invalid ageMonths parameter');
+    }
+
+    if (category) {
+      return this.growthService.getDevelopmentalMilestones(category, ageMonthsNum);
+    } else {
+      return this.growthService.getAllDevelopmentalMilestones(ageMonthsNum);
+    }
   }
 
   @Post()

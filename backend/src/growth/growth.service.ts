@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, ForbiddenException, ConflictException, B
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGrowthRecordDto, UpdateGrowthRecordDto } from './growth.dto';
 import * as Papa from 'papaparse';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class GrowthService {
@@ -263,5 +265,122 @@ export class GrowthService {
     }
 
     return { success: successCount, failed: failedCount };
+  }
+
+  /**
+   * Get WHO growth standards for a specific measurement type, gender, and age
+   */
+  getWHOStandards(
+    measurementType: 'height' | 'weight' | 'headCirc',
+    gender: 'male' | 'female',
+    ageMonths: number,
+  ): { p3: number; p15: number; p50: number; p85: number; p97: number } {
+    // Load WHO standards data
+    const dataPath = path.join(__dirname, 'data', 'who-standards.json');
+    const rawData = fs.readFileSync(dataPath, 'utf-8');
+    const whoData = JSON.parse(rawData);
+
+    // Define type for WHO data point
+    interface WHODataPoint {
+      ageMonths: number;
+      p3: number;
+      p15: number;
+      p50: number;
+      p85: number;
+      p97: number;
+    }
+
+    // Get data for the specific measurement type and gender
+    const standards: WHODataPoint[] = whoData[measurementType]?.[gender];
+    if (!standards) {
+      throw new BadRequestException('Invalid measurement type or gender');
+    }
+
+    // Find the closest age data points for interpolation
+    const sortedData = standards.sort((a: WHODataPoint, b: WHODataPoint) => a.ageMonths - b.ageMonths);
+
+    // If exact match exists, return it
+    const exactMatch = sortedData.find((d: WHODataPoint) => d.ageMonths === ageMonths);
+    if (exactMatch) {
+      return {
+        p3: exactMatch.p3,
+        p15: exactMatch.p15,
+        p50: exactMatch.p50,
+        p85: exactMatch.p85,
+        p97: exactMatch.p97,
+      };
+    }
+
+    // Find surrounding data points for interpolation
+    let lowerPoint = null;
+    let upperPoint = null;
+
+    for (let i = 0; i < sortedData.length - 1; i++) {
+      if (sortedData[i].ageMonths <= ageMonths && sortedData[i + 1].ageMonths >= ageMonths) {
+        lowerPoint = sortedData[i];
+        upperPoint = sortedData[i + 1];
+        break;
+      }
+    }
+
+    // If age is outside the range, use the closest boundary
+    if (!lowerPoint || !upperPoint) {
+      if (ageMonths < sortedData[0].ageMonths) {
+        const point = sortedData[0];
+        return { p3: point.p3, p15: point.p15, p50: point.p50, p85: point.p85, p97: point.p97 };
+      } else {
+        const point = sortedData[sortedData.length - 1];
+        return { p3: point.p3, p15: point.p15, p50: point.p50, p85: point.p85, p97: point.p97 };
+      }
+    }
+
+    // Linear interpolation
+    const ratio = (ageMonths - lowerPoint.ageMonths) / (upperPoint.ageMonths - lowerPoint.ageMonths);
+
+    return {
+      p3: lowerPoint.p3 + (upperPoint.p3 - lowerPoint.p3) * ratio,
+      p15: lowerPoint.p15 + (upperPoint.p15 - lowerPoint.p15) * ratio,
+      p50: lowerPoint.p50 + (upperPoint.p50 - lowerPoint.p50) * ratio,
+      p85: lowerPoint.p85 + (upperPoint.p85 - lowerPoint.p85) * ratio,
+      p97: lowerPoint.p97 + (upperPoint.p97 - lowerPoint.p97) * ratio,
+    };
+  }
+
+  /**
+   * Get developmental milestones for a specific category and age range
+   */
+  getDevelopmentalMilestones(
+    category: 'motor' | 'language' | 'social' | 'cognitive',
+    ageMonths: number,
+  ) {
+    // Load developmental milestones data
+    const dataPath = path.join(__dirname, '..', 'common', 'data', 'developmental-milestones.json');
+    const rawData = fs.readFileSync(dataPath, 'utf-8');
+    const milestonesData = JSON.parse(rawData);
+
+    // Get milestones for the specific category
+    const categoryMilestones = milestonesData[category];
+    if (!categoryMilestones) {
+      throw new BadRequestException('Invalid milestone category');
+    }
+
+    // Find milestones for the age range
+    const relevantMilestones = categoryMilestones.filter(
+      (item: any) => ageMonths >= item.ageMonthsMin && ageMonths <= item.ageMonthsMax,
+    );
+
+    return relevantMilestones.length > 0 ? relevantMilestones[0] : null;
+  }
+
+  /**
+   * Get all developmental milestones for all categories
+   */
+  getAllDevelopmentalMilestones(ageMonths: number) {
+    return {
+      motor: this.getDevelopmentalMilestones('motor', ageMonths),
+      language: this.getDevelopmentalMilestones('language', ageMonths),
+      social: this.getDevelopmentalMilestones('social', ageMonths),
+      cognitive: this.getDevelopmentalMilestones('cognitive', ageMonths),
+    };
   }
 }

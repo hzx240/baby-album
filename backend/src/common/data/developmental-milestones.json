@@ -1,0 +1,242 @@
+{
+  "motor": [
+    {
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 2,
+      "milestones": [
+        { "name": "抬头片刻", "description": "俯卧时能短暂抬头", "typical": 1 },
+        { "name": "握持反射", "description": "手指触碰手掌会紧握", "typical": 0 }
+      ]
+    },
+    {
+      "ageMonthsMin": 2,
+      "ageMonthsMax": 4,
+      "milestones": [
+        { "name": "抬头稳定", "description": "俯卧时能稳定抬头45-90度", "typical": 3 },
+        { "name": "翻身", "description": "能从仰卧翻到侧卧", "typical": 4 }
+      ]
+    },
+    {
+      "ageMonthsMin": 4,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "翻身自如", "description": "能从仰卧翻到俯卧", "typical": 5 },
+        { "name": "坐立支撑", "description": "有支撑时能坐", "typical": 5 }
+      ]
+    },
+    {
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "独坐", "description": "无需支撑能独立坐稳", "typical": 7 },
+        { "name": "爬行", "description": "开始爬行或匍匐前进", "typical": 8 }
+      ]
+    },
+    {
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "扶站", "description": "扶着家具能站立", "typical": 9 },
+        { "name": "扶走", "description": "扶着家具能走几步", "typical": 11 }
+      ]
+    },
+    {
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "独立行走", "description": "能独立走几步", "typical": 13 },
+        { "name": "蹲下捡物", "description": "能蹲下捡东西再站起", "typical": 15 }
+      ]
+    },
+    {
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "跑步", "description": "能小跑", "typical": 20 },
+        { "name": "踢球", "description": "能踢球", "typical": 22 }
+      ]
+    },
+    {
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "双脚跳", "description": "能双脚离地跳", "typical": 28 },
+        { "name": "单脚站", "description": "能单脚站立片刻", "typical": 30 }
+      ]
+    }
+  ],
+  "language": [
+    {
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 3,
+      "milestones": [
+        { "name": "哭声分化", "description": "不同需求有不同哭声", "typical": 1 },
+        { "name": "咕咕声", "description": "发出咕咕声", "typical": 2 }
+      ]
+    },
+    {
+      "ageMonthsMin": 3,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "咿呀学语", "description": "发出元音和辅音组合", "typical": 4 },
+        { "name": "笑出声", "description": "能笑出声音", "typical": 4 }
+      ]
+    },
+    {
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "发音节", "description": "发出ba-ba、ma-ma等音节", "typical": 7 },
+        { "name": "模仿声音", "description": "尝试模仿大人的声音", "typical": 8 }
+      ]
+    },
+    {
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "叫爸妈", "description": "有意识地叫爸爸妈妈", "typical": 10 },
+        { "name": "理解简单指令", "description": "能理解简单的指令", "typical": 11 }
+      ]
+    },
+    {
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "说单词", "description": "能说3-5个单词", "typical": 15 },
+        { "name": "指认物品", "description": "能指认熟悉的物品", "typical": 16 }
+      ]
+    },
+    {
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "词汇爆发", "description": "能说50个以上单词", "typical": 20 },
+        { "name": "两词句", "description": "能说两个词的句子", "typical": 22 }
+      ]
+    },
+    {
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "简单句子", "description": "能说3-4个词的句子", "typical": 28 },
+        { "name": "提问", "description": "开始问为什么", "typical": 30 }
+      ]
+    }
+  ],
+  "social": [
+    {
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 3,
+      "milestones": [
+        { "name": "注视人脸", "description": "能注视人的面孔", "typical": 1 },
+        { "name": "社交性微笑", "description": "对人微笑", "typical": 2 }
+      ]
+    },
+    {
+      "ageMonthsMin": 3,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "认识亲人", "description": "能认出主要照顾者", "typical": 4 },
+        { "name": "喜欢互动", "description": "喜欢与人互动游戏", "typical": 5 }
+      ]
+    },
+    {
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "认生", "description": "对陌生人表现害羞或焦虑", "typical": 7 },
+        { "name": "分离焦虑", "description": "与主要照顾者分离时哭闹", "typical": 8 }
+      ]
+    },
+    {
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "挥手再见", "description": "能挥手表示再见", "typical": 10 },
+        { "name": "模仿动作", "description": "模仿简单的动作", "typical": 11 }
+      ]
+    },
+    {
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "平行游戏", "description": "在其他孩子旁边玩", "typical": 15 },
+        { "name": "表达情感", "description": "能表达喜欢和不喜欢", "typical": 16 }
+      ]
+    },
+    {
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "模仿行为", "description": "模仿大人的日常行为", "typical": 20 },
+        { "name": "帮忙做事", "description": "喜欢帮忙做简单的事", "typical": 22 }
+      ]
+    },
+    {
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "合作游戏", "description": "开始与其他孩子一起玩", "typical": 28 },
+        { "name": "轮流", "description": "理解轮流的概念", "typical": 30 }
+      ]
+    }
+  ],
+  "cognitive": [
+    {
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 3,
+      "milestones": [
+        { "name": "追视", "description": "眼睛能追随移动的物体", "typical": 2 },
+        { "name": "听声转头", "description": "听到声音会转头寻找", "typical": 3 }
+      ]
+    },
+    {
+      "ageMonthsMin": 3,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "伸手够物", "description": "看到物品会伸手去够", "typical": 4 },
+        { "name": "探索物品", "description": "用嘴和手探索物品", "typical": 5 }
+      ]
+    },
+    {
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "物体永存", "description": "理解物体被遮挡后仍存在", "typical": 8 },
+        { "name": "因果关系", "description": "理解简单的因果关系", "typical": 9 }
+      ]
+    },
+    {
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "寻找隐藏物", "description": "能找到被藏起来的玩具", "typical": 10 },
+        { "name": "使用工具", "description": "用工具够取物品", "typical": 11 }
+      ]
+    },
+    {
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "分类", "description": "能按形状或颜色分类", "typical": 15 },
+        { "name": "假装游戏", "description": "开始假装游戏", "typical": 16 }
+      ]
+    },
+    {
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "解决问题", "description": "能解决简单的问题", "typical": 20 },
+        { "name": "认识颜色", "description": "能认识基本颜色", "typical": 22 }
+      ]
+    },
+    {
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "数数", "description": "能数到3或更多", "typical": 28 },
+        { "name": "理解概念", "description": "理解大小、多少等概念", "typical": 30 }
+      ]
+    }
+  ]
+}
