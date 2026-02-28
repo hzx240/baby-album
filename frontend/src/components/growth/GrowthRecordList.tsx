@@ -7,32 +7,6 @@ interface GrowthRecordListProps {
 }
 
 export function GrowthRecordList({ records, onEdit, onDelete }: GrowthRecordListProps) {
-  const getRecordTypeLabel = (type: string) => {
-    switch (type) {
-      case 'HEIGHT':
-        return '身高';
-      case 'WEIGHT':
-        return '体重';
-      case 'HEAD_CIRCUMFERENCE':
-        return '头围';
-      default:
-        return type;
-    }
-  };
-
-  const getRecordTypeUnit = (type: string) => {
-    switch (type) {
-      case 'HEIGHT':
-        return 'cm';
-      case 'WEIGHT':
-        return 'kg';
-      case 'HEAD_CIRCUMFERENCE':
-        return 'cm';
-      default:
-        return '';
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('zh-CN', {
       year: 'numeric',
@@ -42,7 +16,7 @@ export function GrowthRecordList({ records, onEdit, onDelete }: GrowthRecordList
   };
 
   const handleDelete = (record: GrowthRecord) => {
-    if (window.confirm(`确定要删除 ${formatDate(record.date)} 的记录吗？`)) {
+    if (window.confirm(`确定要删除 ${formatDate(record.recordDate)} 的记录吗？`)) {
       onDelete(record.id);
     }
   };
@@ -64,22 +38,40 @@ export function GrowthRecordList({ records, onEdit, onDelete }: GrowthRecordList
           className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
         >
           <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <span
-                className={`px-2 py-1 text-xs font-medium rounded ${
-                  record.recordType === 'HEIGHT'
-                    ? 'bg-blue-100 text-blue-700'
-                    : record.recordType === 'WEIGHT'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-amber-100 text-amber-700'
-                }`}
-              >
-                {getRecordTypeLabel(record.recordType)}
-              </span>
-              <span className="text-lg font-semibold text-gray-900">
-                {record.value} {getRecordTypeUnit(record.recordType)}
-              </span>
-              <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-sm text-gray-500">{formatDate(record.recordDate)}</span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {record.height !== null && record.height !== undefined && (
+                <span className="inline-flex items-center gap-1">
+                  <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
+                    身高
+                  </span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    {record.height} cm
+                  </span>
+                </span>
+              )}
+              {record.weight !== null && record.weight !== undefined && (
+                <span className="inline-flex items-center gap-1">
+                  <span className="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
+                    体重
+                  </span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    {record.weight} kg
+                  </span>
+                </span>
+              )}
+              {record.headCirc !== null && record.headCirc !== undefined && (
+                <span className="inline-flex items-center gap-1">
+                  <span className="px-2 py-1 text-xs font-medium rounded bg-amber-100 text-amber-700">
+                    头围
+                  </span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    {record.headCirc} cm
+                  </span>
+                </span>
+              )}
             </div>
             {record.notes && (
               <p className="text-sm text-gray-600 mt-2">{record.notes}</p>

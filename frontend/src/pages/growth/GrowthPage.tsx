@@ -1,109 +1,49 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { GrowthChart } from '@/components/growth/GrowthChart';
 import { GrowthRecordForm } from '@/components/growth/GrowthRecordForm';
 import { GrowthRecordList } from '@/components/growth/GrowthRecordList';
-import type { GrowthRecord, RecordType, CreateGrowthRecordRequest } from '@/types';
+import { useGrowthStore } from '@/stores/growth.store';
+import type { GrowthRecord, CreateGrowthRecordRequest } from '@/types';
 
-// Mock data for development
-const mockRecords: GrowthRecord[] = [
-  {
-    id: '1',
-    childId: 'child-1',
-    recordType: 'HEIGHT',
-    value: 75.5,
-    date: '2026-01-15',
-    notes: '宝宝长高了',
-    createdAt: '2026-01-15T10:00:00Z',
-  },
-  {
-    id: '2',
-    childId: 'child-1',
-    recordType: 'HEIGHT',
-    value: 76.2,
-    date: '2026-02-01',
-    notes: null,
-    createdAt: '2026-02-01T10:00:00Z',
-  },
-  {
-    id: '3',
-    childId: 'child-1',
-    recordType: 'HEIGHT',
-    value: 77.0,
-    date: '2026-02-15',
-    notes: null,
-    createdAt: '2026-02-15T10:00:00Z',
-  },
-  {
-    id: '4',
-    childId: 'child-1',
-    recordType: 'WEIGHT',
-    value: 9.5,
-    date: '2026-01-15',
-    notes: null,
-    createdAt: '2026-01-15T10:00:00Z',
-  },
-  {
-    id: '5',
-    childId: 'child-1',
-    recordType: 'WEIGHT',
-    value: 9.8,
-    date: '2026-02-01',
-    notes: null,
-    createdAt: '2026-02-01T10:00:00Z',
-  },
-  {
-    id: '6',
-    childId: 'child-1',
-    recordType: 'WEIGHT',
-    value: 10.2,
-    date: '2026-02-15',
-    notes: null,
-    createdAt: '2026-02-15T10:00:00Z',
-  },
-];
+type MeasurementType = 'height' | 'weight' | 'headCirc';
 
 export default function GrowthPage() {
-  const [records, setRecords] = useState<GrowthRecord[]>(mockRecords);
-  const [selectedRecordType, setSelectedRecordType] = useState<RecordType>('HEIGHT');
+  const { childId } = useParams<{ childId: string }>();
+  const { records, isLoading, fetchRecords, createRecord, updateRecord, deleteRecord } = useGrowthStore();
+
+  const [selectedMeasurementType, setSelectedMeasurementType] = useState<MeasurementType>('height');
   const [dateRange, setDateRange] = useState<'1m' | '3m' | '6m' | '1y' | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<GrowthRecord | null>(null);
 
-  const filteredRecords = useMemo(() => {
-    return records.filter((r) => r.recordType === selectedRecordType);
-  }, [records, selectedRecordType]);
-
-  const handleSubmit = (data: CreateGrowthRecordRequest) => {
-    if (editingRecord) {
-      // Update existing record
-      setRecords((prev) =>
-        prev.map((r) =>
-          r.id === editingRecord.id
-            ? {
-                ...r,
-                recordType: data.recordType,
-                value: data.value,
-                date: data.date,
-                notes: data.notes || null,
-              }
-            : r
-        )
-      );
-      setEditingRecord(null);
-    } else {
-      // Create new record
-      const newRecord: GrowthRecord = {
-        id: `temp-${Date.now()}`,
-        childId: data.childId,
-        recordType: data.recordType,
-        value: data.value,
-        date: data.date,
-        notes: data.notes || null,
-        createdAt: new Date().toISOString(),
-      };
-      setRecords((prev) => [...prev, newRecord]);
+  // Fetch records when component mounts or childId changes
+  useEffect(() => {
+    if (childId) {
+      fetchRecords(childId);
     }
-    setShowForm(false);
+  }, [childId, fetchRecords]);
+
+  const filteredRecords = useMemo(() => {
+    return records.filter((r) => {
+      const value = r[selectedMeasurementType];
+      return value !== null && value !== undefined;
+    });
+  }, [records, selectedMeasurementType]);
+
+  const handleSubmit = async (data: CreateGrowthRecordRequest) => {
+    try {
+      if (editingRecord) {
+        await updateRecord(editingRecord.id, data);
+        setEditingRecord(null);
+      } else {
+        await createRecord(data);
+      }
+      setShowForm(false);
+    } catch (error) {
+      console.error('Failed to save record:', error);
+      alert('保存失败，请重试');
+    }
   };
 
   const handleEdit = (record: GrowthRecord) => {
@@ -111,14 +51,35 @@ export default function GrowthPage() {
     setShowForm(true);
   };
 
-  const handleDelete = (recordId: string) => {
-    setRecords((prev) => prev.filter((r) => r.id !== recordId));
+  const handleDelete = async (recordId: string) => {
+    try {
+      await deleteRecord(recordId);
+    } catch (error) {
+      console.error('Failed to delete record:', error);
+      alert('删除失败，请重试');
+    }
   };
 
   const handleCancel = () => {
     setShowForm(false);
     setEditingRecord(null);
   };
+
+  if (!childId) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-red-600">错误：未指定孩子ID</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-gray-600">加载中...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -149,9 +110,9 @@ export default function GrowthPage() {
         {/* Record Type Tabs */}
         <div className="flex gap-2 mb-4">
           <button
-            onClick={() => setSelectedRecordType('HEIGHT')}
+            onClick={() => setSelectedMeasurementType('height')}
             className={`px-4 py-2 rounded-lg font-medium ${
-              selectedRecordType === 'HEIGHT'
+              selectedMeasurementType === 'height'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
@@ -159,9 +120,9 @@ export default function GrowthPage() {
             身高
           </button>
           <button
-            onClick={() => setSelectedRecordType('WEIGHT')}
+            onClick={() => setSelectedMeasurementType('weight')}
             className={`px-4 py-2 rounded-lg font-medium ${
-              selectedRecordType === 'WEIGHT'
+              selectedMeasurementType === 'weight'
                 ? 'bg-green-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
@@ -169,9 +130,9 @@ export default function GrowthPage() {
             体重
           </button>
           <button
-            onClick={() => setSelectedRecordType('HEAD_CIRCUMFERENCE')}
+            onClick={() => setSelectedMeasurementType('headCirc')}
             className={`px-4 py-2 rounded-lg font-medium ${
-              selectedRecordType === 'HEAD_CIRCUMFERENCE'
+              selectedMeasurementType === 'headCirc'
                 ? 'bg-amber-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
@@ -182,7 +143,7 @@ export default function GrowthPage() {
 
         <GrowthChart
           records={filteredRecords}
-          recordType={selectedRecordType}
+          measurementType={selectedMeasurementType}
           dateRange={dateRange}
           showWHOCurves={true}
         />
@@ -206,16 +167,17 @@ export default function GrowthPage() {
               {editingRecord ? '编辑记录' : '添加新记录'}
             </h3>
             <GrowthRecordForm
-              childId="child-1"
+              childId={childId}
               onSubmit={handleSubmit}
               onCancel={handleCancel}
               initialData={
                 editingRecord
                   ? {
-                      recordType: editingRecord.recordType,
-                      value: editingRecord.value,
-                      date: editingRecord.date,
-                      notes: editingRecord.notes || undefined,
+                      recordDate: editingRecord.recordDate,
+                      height: editingRecord.height ?? undefined,
+                      weight: editingRecord.weight ?? undefined,
+                      headCirc: editingRecord.headCirc ?? undefined,
+                      notes: editingRecord.notes ?? undefined,
                     }
                   : undefined
               }
@@ -225,7 +187,7 @@ export default function GrowthPage() {
 
         <GrowthRecordList
           records={records.sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            (a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime()
           )}
           onEdit={handleEdit}
           onDelete={handleDelete}

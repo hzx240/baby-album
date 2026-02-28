@@ -563,6 +563,7 @@ export interface GrowthRecord {
 }
 
 export interface CreateGrowthRecordRequest {
+  childId: string;
   recordDate: string;
   height?: number;
   weight?: number;

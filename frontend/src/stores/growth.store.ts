@@ -1,164 +1,98 @@
 import { create } from 'zustand';
 import { growthApi } from '@/api/growth';
-import type {
-  GrowthRecord,
-  CreateGrowthRecordRequest,
-  UpdateGrowthRecordRequest,
-  QueryGrowthRecordsParams,
-} from '@/types';
-
-export type MeasurementType = 'height' | 'weight' | 'headCirc';
+import type { GrowthRecord, CreateGrowthRecordRequest, UpdateGrowthRecordRequest } from '@/types';
 
 interface GrowthState {
   records: GrowthRecord[];
   isLoading: boolean;
   error: string | null;
-  selectedMeasurement: MeasurementType;
-  dateRange: '1m' | '3m' | '6m' | '1y' | 'all';
 
   // Actions
-  fetchRecords: (childId: string, params?: QueryGrowthRecordsParams) => Promise<void>;
-  createRecord: (childId: string, data: CreateGrowthRecordRequest) => Promise<GrowthRecord>;
-  updateRecord: (
-    childId: string,
-    recordId: string,
-    data: UpdateGrowthRecordRequest
-  ) => Promise<void>;
-  deleteRecord: (childId: string, recordId: string) => Promise<void>;
-  setSelectedMeasurement: (type: MeasurementType) => void;
-  setDateRange: (range: '1m' | '3m' | '6m' | '1y' | 'all') => void;
+  fetchRecords: (childId: string) => Promise<void>;
+  createRecord: (data: CreateGrowthRecordRequest) => Promise<void>;
+  updateRecord: (recordId: string, data: UpdateGrowthRecordRequest) => Promise<void>;
+  deleteRecord: (recordId: string) => Promise<void>;
   clearError: () => void;
-  exportCSV: (childId: string) => Promise<void>;
-  importCSV: (childId: string, file: File) => Promise<{ success: number; failed: number }>;
 }
 
 export const useGrowthStore = create<GrowthState>((set, get) => ({
   records: [],
   isLoading: false,
   error: null,
-  selectedMeasurement: 'height',
-  dateRange: 'all',
 
-  fetchRecords: async (childId: string, params?: QueryGrowthRecordsParams) => {
+  fetchRecords: async (childId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const records = await growthApi.getGrowthRecords(childId, params);
+      const records = await growthApi.getGrowthRecords(childId);
       set({ records, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
-        error: error.response?.data?.message || '获取成长记录失败',
-        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch records',
+        isLoading: false
       });
     }
   },
 
-  createRecord: async (childId: string, data: CreateGrowthRecordRequest) => {
+  createRecord: async (data: CreateGrowthRecordRequest) => {
     set({ isLoading: true, error: null });
     try {
-      const newRecord = await growthApi.createGrowthRecord(childId, data);
+      const newRecord = await growthApi.createGrowthRecord(data.childId, data);
       set((state) => ({
         records: [...state.records, newRecord],
         isLoading: false,
       }));
-      return newRecord;
-    } catch (error: any) {
+    } catch (error) {
       set({
-        error: error.response?.data?.message || '添加成长记录失败',
-        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to create record',
+        isLoading: false
       });
       throw error;
     }
   },
 
-  updateRecord: async (
-    childId: string,
-    recordId: string,
-    data: UpdateGrowthRecordRequest
-  ) => {
+  updateRecord: async (recordId: string, data: UpdateGrowthRecordRequest) => {
     set({ isLoading: true, error: null });
     try {
-      const updatedRecord = await growthApi.updateGrowthRecord(childId, recordId, data);
+      // Get childId from existing record
+      const existingRecord = get().records.find((r) => r.id === recordId);
+      if (!existingRecord) {
+        throw new Error('Record not found');
+      }
+      const updatedRecord = await growthApi.updateGrowthRecord(existingRecord.childId, recordId, data);
       set((state) => ({
         records: state.records.map((r) => (r.id === recordId ? updatedRecord : r)),
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
-        error: error.response?.data?.message || '更新成长记录失败',
-        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to update record',
+        isLoading: false
       });
       throw error;
     }
   },
 
-  deleteRecord: async (childId: string, recordId: string) => {
+  deleteRecord: async (recordId: string) => {
     set({ isLoading: true, error: null });
     try {
-      await growthApi.deleteGrowthRecord(childId, recordId);
+      // Get childId from existing record
+      const existingRecord = get().records.find((r) => r.id === recordId);
+      if (!existingRecord) {
+        throw new Error('Record not found');
+      }
+      await growthApi.deleteGrowthRecord(existingRecord.childId, recordId);
       set((state) => ({
         records: state.records.filter((r) => r.id !== recordId),
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
-        error: error.response?.data?.message || '删除成长记录失败',
-        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to delete record',
+        isLoading: false
       });
       throw error;
     }
-  },
-
-  setSelectedMeasurement: (type: MeasurementType) => {
-    set({ selectedMeasurement: type });
-  },
-
-  setDateRange: (range: '1m' | '3m' | '6m' | '1y' | 'all') => {
-    set({ dateRange: range });
   },
 
   clearError: () => set({ error: null }),
-
-  exportCSV: async (childId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const blob = await growthApi.exportGrowthRecordsCSV(childId);
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `growth-records-${childId}-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      set({ isLoading: false });
-    } catch (error: any) {
-      set({
-        error: error.response?.data?.message || '导出CSV失败',
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
-
-  importCSV: async (childId: string, file: File) => {
-    set({ isLoading: true, error: null });
-    try {
-      const result = await growthApi.importGrowthRecordsCSV(childId, file);
-
-      // Refresh records after import
-      await get().fetchRecords(childId);
-
-      set({ isLoading: false });
-      return result;
-    } catch (error: any) {
-      set({
-        error: error.response?.data?.message || '导入CSV失败',
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
 }));

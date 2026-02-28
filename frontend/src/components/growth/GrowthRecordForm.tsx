@@ -1,16 +1,11 @@
 import { useState } from 'react';
-import type { RecordType, CreateGrowthRecordRequest } from '@/types';
+import type { CreateGrowthRecordRequest, GrowthRecord } from '@/types';
 
 interface GrowthRecordFormProps {
   childId: string;
   onSubmit: (data: CreateGrowthRecordRequest) => void;
   onCancel: () => void;
-  initialData?: {
-    recordType: RecordType;
-    value: number;
-    date: string;
-    notes?: string;
-  };
+  initialData?: Partial<GrowthRecord>;
 }
 
 export function GrowthRecordForm({
@@ -19,12 +14,11 @@ export function GrowthRecordForm({
   onCancel,
   initialData,
 }: GrowthRecordFormProps) {
-  const [recordType, setRecordType] = useState<RecordType>(
-    initialData?.recordType || 'HEIGHT'
-  );
-  const [value, setValue] = useState(initialData?.value?.toString() || '');
-  const [date, setDate] = useState(
-    initialData?.date || new Date().toISOString().split('T')[0]
+  const [height, setHeight] = useState(initialData?.height?.toString() || '');
+  const [weight, setWeight] = useState(initialData?.weight?.toString() || '');
+  const [headCirc, setHeadCirc] = useState(initialData?.headCirc?.toString() || '');
+  const [recordDate, setRecordDate] = useState(
+    initialData?.recordDate || new Date().toISOString().split('T')[0]
   );
   const [notes, setNotes] = useState(initialData?.notes || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -32,35 +26,40 @@ export function GrowthRecordForm({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Validate value
-    const numValue = parseFloat(value);
-    if (!value || isNaN(numValue)) {
-      newErrors.value = '请输入有效的数值';
-    } else {
-      switch (recordType) {
-        case 'HEIGHT':
-          if (numValue < 0 || numValue > 200) {
-            newErrors.value = '身高范围：0-200cm';
-          }
-          break;
-        case 'WEIGHT':
-          if (numValue < 0 || numValue > 100) {
-            newErrors.value = '体重范围：0-100kg';
-          }
-          break;
-        case 'HEAD_CIRCUMFERENCE':
-          if (numValue < 0 || numValue > 60) {
-            newErrors.value = '头围范围：0-60cm';
-          }
-          break;
+    // Validate at least one measurement is provided
+    if (!height && !weight && !headCirc) {
+      newErrors.measurements = '请至少填写一项测量值';
+    }
+
+    // Validate height
+    if (height) {
+      const numHeight = parseFloat(height);
+      if (isNaN(numHeight) || numHeight < 0 || numHeight > 200) {
+        newErrors.height = '身高范围：0-200cm';
+      }
+    }
+
+    // Validate weight
+    if (weight) {
+      const numWeight = parseFloat(weight);
+      if (isNaN(numWeight) || numWeight < 0 || numWeight > 100) {
+        newErrors.weight = '体重范围：0-100kg';
+      }
+    }
+
+    // Validate head circumference
+    if (headCirc) {
+      const numHeadCirc = parseFloat(headCirc);
+      if (isNaN(numHeadCirc) || numHeadCirc < 0 || numHeadCirc > 60) {
+        newErrors.headCirc = '头围范围：0-60cm';
       }
     }
 
     // Validate date
-    if (!date) {
-      newErrors.date = '请选择日期';
-    } else if (new Date(date) > new Date()) {
-      newErrors.date = '日期不能晚于今天';
+    if (!recordDate) {
+      newErrors.recordDate = '请选择日期';
+    } else if (new Date(recordDate) > new Date()) {
+      newErrors.recordDate = '日期不能晚于今天';
     }
 
     // Validate notes
@@ -77,120 +76,102 @@ export function GrowthRecordForm({
     if (validateForm()) {
       onSubmit({
         childId,
-        recordType,
-        value: parseFloat(value),
-        date,
+        recordDate,
+        height: height ? parseFloat(height) : undefined,
+        weight: weight ? parseFloat(weight) : undefined,
+        headCirc: headCirc ? parseFloat(headCirc) : undefined,
         notes: notes || undefined,
       });
     }
   };
 
-  const getLabel = () => {
-    switch (recordType) {
-      case 'HEIGHT':
-        return '身高 (cm)';
-      case 'WEIGHT':
-        return '体重 (kg)';
-      case 'HEAD_CIRCUMFERENCE':
-        return '头围 (cm)';
-      default:
-        return '数值';
-    }
-  };
-
-  const getPlaceholder = () => {
-    switch (recordType) {
-      case 'HEIGHT':
-        return '例如：75.5';
-      case 'WEIGHT':
-        return '例如：9.8';
-      case 'HEAD_CIRCUMFERENCE':
-        return '例如：45.2';
-      default:
-        return '';
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          记录类型
-        </label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setRecordType('HEIGHT')}
-            className={`px-4 py-2 rounded-lg ${
-              recordType === 'HEIGHT'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700'
+      {errors.measurements && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 text-sm">{errors.measurements}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-1">
+            身高 (cm) <span className="text-gray-400">可选</span>
+          </label>
+          <input
+            type="number"
+            id="height"
+            step="0.1"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+            placeholder="例如：75.5"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.height
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
             }`}
-          >
-            身高
-          </button>
-          <button
-            type="button"
-            onClick={() => setRecordType('WEIGHT')}
-            className={`px-4 py-2 rounded-lg ${
-              recordType === 'WEIGHT'
-                ? 'bg-green-500 text-white'
-                : 'bg-gray-100 text-gray-700'
+          />
+          {errors.height && <p className="text-red-500 text-sm mt-1">{errors.height}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
+            体重 (kg) <span className="text-gray-400">可选</span>
+          </label>
+          <input
+            type="number"
+            id="weight"
+            step="0.01"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            placeholder="例如：9.8"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.weight
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
             }`}
-          >
-            体重
-          </button>
-          <button
-            type="button"
-            onClick={() => setRecordType('HEAD_CIRCUMFERENCE')}
-            className={`px-4 py-2 rounded-lg ${
-              recordType === 'HEAD_CIRCUMFERENCE'
-                ? 'bg-amber-500 text-white'
-                : 'bg-gray-100 text-gray-700'
+          />
+          {errors.weight && <p className="text-red-500 text-sm mt-1">{errors.weight}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="headCirc" className="block text-sm font-medium text-gray-700 mb-1">
+            头围 (cm) <span className="text-gray-400">可选</span>
+          </label>
+          <input
+            type="number"
+            id="headCirc"
+            step="0.1"
+            value={headCirc}
+            onChange={(e) => setHeadCirc(e.target.value)}
+            placeholder="例如：45.2"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.headCirc
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
             }`}
-          >
-            头围
-          </button>
+          />
+          {errors.headCirc && <p className="text-red-500 text-sm mt-1">{errors.headCirc}</p>}
         </div>
       </div>
 
       <div>
-        <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-1">
-          {getLabel()}
-        </label>
-        <input
-          type="number"
-          id="value"
-          step="0.01"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder={getPlaceholder()}
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-            errors.value
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:ring-blue-500'
-          }`}
-        />
-        {errors.value && <p className="text-red-500 text-sm mt-1">{errors.value}</p>}
-      </div>
-
-      <div>
-        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="recordDate" className="block text-sm font-medium text-gray-700 mb-1">
           日期
         </label>
         <input
           type="date"
-          id="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          id="recordDate"
+          value={recordDate}
+          onChange={(e) => setRecordDate(e.target.value)}
           max={new Date().toISOString().split('T')[0]}
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-            errors.date
+            errors.recordDate
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 focus:ring-blue-500'
           }`}
         />
-        {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+        {errors.recordDate && <p className="text-red-500 text-sm mt-1">{errors.recordDate}</p>}
       </div>
 
       <div>
@@ -232,4 +213,3 @@ export function GrowthRecordForm({
     </form>
   );
 }
-

@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGrowthRecordDto, UpdateGrowthRecordDto } from './growth.dto';
+import * as Papa from 'papaparse';
 
 @Injectable()
 export class GrowthService {
@@ -120,5 +121,147 @@ export class GrowthService {
     }
 
     return child;
+  }
+
+  /**
+   * Export growth records to CSV
+   */
+  async exportToCSV(childId: string, familyId: string): Promise<string> {
+    // Validate child access
+    await this.validateChildAccess(childId, familyId);
+
+    // Get all growth records
+    const records = await this.prisma.growthRecord.findMany({
+      where: { childId },
+      orderBy: { recordDate: 'asc' },
+    });
+
+    // Convert to CSV format
+    const csvData = records.map(record => ({
+      Date: record.recordDate.toISOString().split('T')[0],
+      'Height(cm)': record.height || '',
+      'Weight(kg)': record.weight || '',
+      'HeadCirc(cm)': record.headCirc || '',
+      Notes: record.notes || '',
+    }));
+
+    // Generate CSV string
+    const csv = Papa.unparse(csvData, {
+      header: true,
+      columns: ['Date', 'Height(cm)', 'Weight(kg)', 'HeadCirc(cm)', 'Notes'],
+    });
+
+    return csv;
+  }
+
+  /**
+   * Import growth records from CSV
+   */
+  async importFromCSV(
+    childId: string,
+    familyId: string,
+    csvContent: string,
+  ): Promise<{ success: number; failed: number }> {
+    // Validate child access
+    await this.validateChildAccess(childId, familyId);
+
+    // Parse CSV
+    const parseResult = Papa.parse<{
+      Date: string;
+      'Height(cm)': string;
+      'Weight(kg)': string;
+      'HeadCirc(cm)': string;
+      Notes: string;
+    }>(csvContent, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header) => header.trim(),
+    });
+
+    if (parseResult.errors.length > 0) {
+      throw new BadRequestException('CSV格式错误: ' + parseResult.errors[0].message);
+    }
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    // Process each row
+    for (const row of parseResult.data) {
+      try {
+        // Validate required fields
+        if (!row.Date) {
+          failedCount++;
+          continue;
+        }
+
+        // Parse date
+        const recordDate = new Date(row.Date);
+        if (isNaN(recordDate.getTime())) {
+          failedCount++;
+          continue;
+        }
+
+        // Parse numeric fields
+        const height = row['Height(cm)'] ? parseFloat(row['Height(cm)']) : undefined;
+        const weight = row['Weight(kg)'] ? parseFloat(row['Weight(kg)']) : undefined;
+        const headCirc = row['HeadCirc(cm)'] ? parseFloat(row['HeadCirc(cm)']) : undefined;
+
+        // Validate numeric fields
+        if (height !== undefined && (isNaN(height) || height <= 0)) {
+          failedCount++;
+          continue;
+        }
+        if (weight !== undefined && (isNaN(weight) || weight <= 0)) {
+          failedCount++;
+          continue;
+        }
+        if (headCirc !== undefined && (isNaN(headCirc) || headCirc <= 0)) {
+          failedCount++;
+          continue;
+        }
+
+        // Check if record already exists
+        const existingRecord = await this.prisma.growthRecord.findUnique({
+          where: {
+            childId_recordDate: {
+              childId,
+              recordDate,
+            },
+          },
+        });
+
+        if (existingRecord) {
+          // Update existing record
+          await this.prisma.growthRecord.update({
+            where: { id: existingRecord.id },
+            data: {
+              height,
+              weight,
+              headCirc,
+              notes: row.Notes || undefined,
+            },
+          });
+        } else {
+          // Create new record
+          await this.prisma.growthRecord.create({
+            data: {
+              childId,
+              recordDate,
+              height,
+              weight,
+              headCirc,
+              notes: row.Notes || undefined,
+            },
+          });
+        }
+
+        successCount++;
+      } catch (error) {
+        failedCount++;
+        console.error('Failed to import record:', error);
+      }
+    }
+
+    return { success: successCount, failed: failedCount };
   }
 }

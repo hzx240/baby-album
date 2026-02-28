@@ -11,24 +11,29 @@ import {
 } from 'recharts';
 import type { GrowthRecord } from '@/types';
 
+type MeasurementType = 'height' | 'weight' | 'headCirc';
+
 interface GrowthChartProps {
   records: GrowthRecord[];
-  recordType: 'HEIGHT' | 'WEIGHT' | 'HEAD_CIRCUMFERENCE';
+  measurementType: MeasurementType;
   showWHOCurves?: boolean;
   dateRange?: '1m' | '3m' | '6m' | '1y' | 'all';
 }
 
 export function GrowthChart({
   records,
-  recordType,
+  measurementType,
   showWHOCurves = true,
   dateRange = 'all',
 }: GrowthChartProps) {
   const chartData = useMemo(() => {
-    // Filter records by date range
+    // Filter records by date range and measurement type
     const now = new Date();
     const filteredRecords = records.filter((record) => {
-      const recordDate = new Date(record.date);
+      // Skip records without the selected measurement
+      if (record[measurementType] === null) return false;
+
+      const recordDate = new Date(record.recordDate);
       const diffMonths =
         (now.getFullYear() - recordDate.getFullYear()) * 12 +
         (now.getMonth() - recordDate.getMonth());
@@ -49,24 +54,24 @@ export function GrowthChart({
 
     // Sort by date
     return filteredRecords
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .sort((a, b) => new Date(a.recordDate).getTime() - new Date(b.recordDate).getTime())
       .map((record) => ({
-        date: new Date(record.date).toLocaleDateString('zh-CN', {
+        date: new Date(record.recordDate).toLocaleDateString('zh-CN', {
           month: 'short',
           day: 'numeric',
         }),
-        value: record.value,
-        fullDate: record.date,
+        value: record[measurementType],
+        fullDate: record.recordDate,
       }));
-  }, [records, dateRange]);
+  }, [records, measurementType, dateRange]);
 
   const getYAxisLabel = () => {
-    switch (recordType) {
-      case 'HEIGHT':
+    switch (measurementType) {
+      case 'height':
         return '身高 (cm)';
-      case 'WEIGHT':
+      case 'weight':
         return '体重 (kg)';
-      case 'HEAD_CIRCUMFERENCE':
+      case 'headCirc':
         return '头围 (cm)';
       default:
         return '';
@@ -74,12 +79,12 @@ export function GrowthChart({
   };
 
   const getLineColor = () => {
-    switch (recordType) {
-      case 'HEIGHT':
+    switch (measurementType) {
+      case 'height':
         return '#3b82f6'; // blue
-      case 'WEIGHT':
+      case 'weight':
         return '#10b981'; // green
-      case 'HEAD_CIRCUMFERENCE':
+      case 'headCirc':
         return '#f59e0b'; // amber
       default:
         return '#6b7280';

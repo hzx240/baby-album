@@ -23,6 +23,7 @@ import { AlbumsModule } from './albums/albums.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { CsrfModule } from './csrf/csrf.module';
 import { CsrfGuard } from './common/guards/csrf.guard';
+import { GrowthModule } from './growth/growth.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CsrfGuard } from './common/guards/csrf.guard';
     AlbumsModule,
     TimelineModule,
     CsrfModule,
+    GrowthModule,
   ],
   controllers: [AppController],
   providers: [
