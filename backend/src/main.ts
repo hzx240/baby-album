@@ -5,10 +5,50 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { EnvValidationService } from './common/env-validation.service';
 import { Logger } from '@nestjs/common';
 import * as express from 'express';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
+
+  // 🔒 SECURITY: Cookie parser for CSRF protection
+  app.use(cookieParser());
+
+  // 🔒 SECURITY: Helmet - Security headers
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"], // 允许内联脚本（React需要）
+          styleSrc: ["'self'", "'unsafe-inline'"], // 允许内联样式
+          imgSrc: ["'self'", 'data:', 'https:', 'blob:'], // 允许图片来源
+          connectSrc: [
+            "'self'",
+            process.env.CORS_ORIGIN || 'http://localhost:5173',
+          ], // API连接
+          fontSrc: ["'self'", 'data:'],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'", 'blob:'],
+          frameSrc: ["'none'"],
+        },
+      },
+      hsts: {
+        maxAge: 31536000, // 1年
+        includeSubDomains: true,
+        preload: true,
+      },
+      frameguard: {
+        action: 'deny', // 防止点击劫持
+      },
+      noSniff: true, // X-Content-Type-Options: nosniff
+      xssFilter: true, // X-XSS-Protection
+      referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin',
+      },
+    }),
+  );
 
   // 🔒 SECURITY: Request size limits to prevent DoS attacks
   // Limit JSON body size

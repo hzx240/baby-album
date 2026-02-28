@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +18,11 @@ import { FamilyContextInterceptor } from './common/interceptors/family-context.i
 import { RedisModule } from './redis/redis.module';
 import { EnvValidationService } from './common/env-validation.service';
 import { FileValidationService } from './common/file-validation.service';
+import { HealthModule } from './health/health.module';
+import { AlbumsModule } from './albums/albums.module';
+import { TimelineModule } from './timeline/timeline.module';
+import { CsrfModule } from './csrf/csrf.module';
+import { CsrfGuard } from './common/guards/csrf.guard';
 
 @Module({
   imports: [
@@ -39,12 +44,17 @@ import { FileValidationService } from './common/file-validation.service';
     FamilyInvitationsModule,
     AuditModule,
     RedisModule,
+    HealthModule,
+    AlbumsModule,
+    TimelineModule,
+    CsrfModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     EnvValidationService,
     FileValidationService,
+    Reflector,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
@@ -53,6 +63,12 @@ import { FileValidationService } from './common/file-validation.service';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    // CSRF保护暂时不作为全局Guard启用
+    // 可以在需要的Controller或路由上手动添加 @UseGuards(CsrfGuard)
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: CsrfGuard,
+    // },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditLogInterceptor,

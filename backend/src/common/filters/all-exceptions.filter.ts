@@ -16,6 +16,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = '服务器内部错误，请稍后重试';
+    let detailedMessage = message;
 
     // 处理 HTTP 异常
     if (exception instanceof HttpException) {
@@ -23,37 +24,54 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'string') {
+        detailedMessage = exceptionResponse;
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
         const responseObj = exceptionResponse as any;
-        message = responseObj.message || responseObj.error || message;
+        detailedMessage = responseObj.message || responseObj.error || message;
+        message = detailedMessage;
 
         // 处理验证错误
         if (Array.isArray(responseObj.message)) {
-          message = this.formatValidationErrors(responseObj.message);
+          detailedMessage = this.formatValidationErrors(responseObj.message);
+          message = detailedMessage;
         }
       }
     }
     // 处理其他错误
     else if (exception instanceof Error) {
-      message = exception.message;
+      detailedMessage = exception.message;
+      // 生产环境不暴露内部错误详情
+      message = process.env.NODE_ENV === 'production'
+        ? '服务器内部错误，请稍后重试'
+        : exception.message;
     }
 
-    // 记录错误
+    // 记录详细错误到日志（包含堆栈信息）
     console.error('Exception:', {
       path: request.url,
       method: request.method,
       status,
-      message,
-      exception,
+      message: detailedMessage,
+      stack: exception instanceof Error ? exception.stack : undefined,
+      timestamp: new Date().toISOString(),
     });
 
-    response.status(status).json({
-      statusCode: status,
-      message,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+    // 生产环境返回简化的错误响应
+    const errorResponse = process.env.NODE_ENV === 'production'
+      ? {
+          statusCode: status,
+          message: status >= 500 ? '服务器内部错误，请稍后重试' : message,
+          timestamp: new Date().toISOString(),
+        }
+      : {
+          statusCode: status,
+          message,
+          timestamp: new Date().toISOString(),
+          path: request.url,
+        };
+
+    response.status(status).json(errorResponse);
   }
 
   private formatValidationErrors(errors: string[]): string {
