@@ -24,6 +24,7 @@ import { TimelineModule } from './timeline/timeline.module';
 import { CsrfModule } from './csrf/csrf.module';
 import { CsrfGuard } from './common/guards/csrf.guard';
 import { GrowthModule } from './growth/growth.module';
+import { MilestoneReminderModule } from './milestone-reminder/milestone-reminder.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { GrowthModule } from './growth/growth.module';
     TimelineModule,
     CsrfModule,
     GrowthModule,
+    MilestoneReminderModule,
   ],
   controllers: [AppController],
   providers: [
