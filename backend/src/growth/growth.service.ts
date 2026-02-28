@@ -153,6 +153,11 @@ export class GrowthService {
       columns: ['Date', 'Height(cm)', 'Weight(kg)', 'HeadCirc(cm)', 'Notes'],
     });
 
+    // Handle empty array case - return headers only
+    if (records.length === 0) {
+      return 'Date,Height(cm),Weight(kg),HeadCirc(cm),Notes\r\n';
+    }
+
     return csv;
   }
 
