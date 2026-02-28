@@ -5,26 +5,27 @@ import type {
   CreateGrowthRecordRequest,
   UpdateGrowthRecordRequest,
   QueryGrowthRecordsParams,
-  RecordType,
 } from '@/types';
+
+export type MeasurementType = 'height' | 'weight' | 'headCirc';
 
 interface GrowthState {
   records: GrowthRecord[];
   isLoading: boolean;
   error: string | null;
-  selectedRecordType: RecordType;
+  selectedMeasurement: MeasurementType;
   dateRange: '1m' | '3m' | '6m' | '1y' | 'all';
 
   // Actions
   fetchRecords: (childId: string, params?: QueryGrowthRecordsParams) => Promise<void>;
-  createRecord: (data: CreateGrowthRecordRequest) => Promise<GrowthRecord>;
+  createRecord: (childId: string, data: CreateGrowthRecordRequest) => Promise<GrowthRecord>;
   updateRecord: (
     childId: string,
     recordId: string,
     data: UpdateGrowthRecordRequest
   ) => Promise<void>;
   deleteRecord: (childId: string, recordId: string) => Promise<void>;
-  setSelectedRecordType: (type: RecordType) => void;
+  setSelectedMeasurement: (type: MeasurementType) => void;
   setDateRange: (range: '1m' | '3m' | '6m' | '1y' | 'all') => void;
   clearError: () => void;
   exportCSV: (childId: string) => Promise<void>;
@@ -35,14 +36,14 @@ export const useGrowthStore = create<GrowthState>((set, get) => ({
   records: [],
   isLoading: false,
   error: null,
-  selectedRecordType: 'HEIGHT',
+  selectedMeasurement: 'height',
   dateRange: 'all',
 
   fetchRecords: async (childId: string, params?: QueryGrowthRecordsParams) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await growthApi.getGrowthRecords(childId, params);
-      set({ records: response.data, isLoading: false });
+      const records = await growthApi.getGrowthRecords(childId, params);
+      set({ records, isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || '获取成长记录失败',
@@ -51,10 +52,10 @@ export const useGrowthStore = create<GrowthState>((set, get) => ({
     }
   },
 
-  createRecord: async (data: CreateGrowthRecordRequest) => {
+  createRecord: async (childId: string, data: CreateGrowthRecordRequest) => {
     set({ isLoading: true, error: null });
     try {
-      const newRecord = await growthApi.createGrowthRecord(data);
+      const newRecord = await growthApi.createGrowthRecord(childId, data);
       set((state) => ({
         records: [...state.records, newRecord],
         isLoading: false,
@@ -107,8 +108,8 @@ export const useGrowthStore = create<GrowthState>((set, get) => ({
     }
   },
 
-  setSelectedRecordType: (type: RecordType) => {
-    set({ selectedRecordType: type });
+  setSelectedMeasurement: (type: MeasurementType) => {
+    set({ selectedMeasurement: type });
   },
 
   setDateRange: (range: '1m' | '3m' | '6m' | '1y' | 'all') => {
