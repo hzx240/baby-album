@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -9,23 +9,40 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import type { GrowthRecord } from '@/types';
+import type { GrowthRecord, Child } from '@/types';
+import { growthApi, type WHOStandardsData } from '@/api/growth';
 
 type MeasurementType = 'height' | 'weight' | 'headCirc';
 
 interface GrowthChartProps {
   records: GrowthRecord[];
   measurementType: MeasurementType;
+  child: Child;
+  childId: string;
   showWHOCurves?: boolean;
   dateRange?: '1m' | '3m' | '6m' | '1y' | 'all';
+}
+
+// Calculate age in months from birth date to a specific date
+function calculateAgeInMonths(birthDate: string, targetDate: string): number {
+  const birth = new Date(birthDate);
+  const target = new Date(targetDate);
+  const months = (target.getFullYear() - birth.getFullYear()) * 12 +
+                 (target.getMonth() - birth.getMonth());
+  return Math.max(0, Math.min(60, months)); // WHO data is for 0-60 months
 }
 
 export function GrowthChart({
   records,
   measurementType,
+  child,
+  childId,
   showWHOCurves = true,
   dateRange = 'all',
 }: GrowthChartProps) {
+  const [whoData, setWhoData] = useState<Map<string, WHOStandardsData>>(new Map());
+  const [isLoadingWHO, setIsLoadingWHO] = useState(false);
+
   const chartData = useMemo(() => {
     // Filter records by date range and measurement type
     const now = new Date();
@@ -55,15 +72,70 @@ export function GrowthChart({
     // Sort by date
     return filteredRecords
       .sort((a, b) => new Date(a.recordDate).getTime() - new Date(b.recordDate).getTime())
-      .map((record) => ({
-        date: new Date(record.recordDate).toLocaleDateString('zh-CN', {
-          month: 'short',
-          day: 'numeric',
-        }),
-        value: record[measurementType],
-        fullDate: record.recordDate,
-      }));
-  }, [records, measurementType, dateRange]);
+      .map((record) => {
+        const who = whoData.get(record.recordDate);
+        return {
+          date: new Date(record.recordDate).toLocaleDateString('zh-CN', {
+            month: 'short',
+            day: 'numeric',
+          }),
+          value: record[measurementType],
+          fullDate: record.recordDate,
+          p3: who?.p3,
+          p15: who?.p15,
+          p50: who?.p50,
+          p85: who?.p85,
+          p97: who?.p97,
+        };
+      });
+  }, [records, measurementType, dateRange, whoData]);
+
+  // Fetch WHO standards data for all record dates
+  useEffect(() => {
+    if (!showWHOCurves || !child.birthDate || !child.gender) {
+      return;
+    }
+
+    const gender = child.gender as 'male' | 'female';
+    if (gender !== 'male' && gender !== 'female') {
+      return;
+    }
+
+    const fetchWHOData = async () => {
+      setIsLoadingWHO(true);
+      const newWhoData = new Map<string, WHOStandardsData>();
+
+      try {
+        // Fetch WHO data for each unique record date
+        const uniqueDates = [...new Set(records.map(r => r.recordDate))];
+
+        await Promise.all(
+          uniqueDates.map(async (recordDate) => {
+            try {
+              const ageMonths = calculateAgeInMonths(child.birthDate!, recordDate);
+              const data = await growthApi.getWHOStandards(
+                childId,
+                measurementType,
+                gender,
+                ageMonths
+              );
+              newWhoData.set(recordDate, data);
+            } catch (error) {
+              console.error(`Failed to fetch WHO data for ${recordDate}:`, error);
+            }
+          })
+        );
+
+        setWhoData(newWhoData);
+      } catch (error) {
+        console.error('Failed to fetch WHO standards:', error);
+      } finally {
+        setIsLoadingWHO(false);
+      }
+    };
+
+    fetchWHOData();
+  }, [records, measurementType, child.birthDate, child.gender, childId, showWHOCurves]);
 
   const getYAxisLabel = () => {
     switch (measurementType) {
@@ -103,25 +175,93 @@ export function GrowthChart({
   }
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis label={{ value: getYAxisLabel(), angle: -90, position: 'insideLeft' }} />
-        <Tooltip />
-        <Legend />
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke={getLineColor()}
-          strokeWidth={2}
-          dot={{ r: 4 }}
-          activeDot={{ r: 6 }}
-          name={getYAxisLabel()}
-        />
-        {/* TODO: Add WHO standard curves when data is available */}
-      </LineChart>
-    </ResponsiveContainer>
+    <div>
+      {isLoadingWHO && (
+        <div className="text-sm text-gray-500 mb-2">加载WHO标准数据...</div>
+      )}
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis label={{ value: getYAxisLabel(), angle: -90, position: 'insideLeft' }} />
+          <Tooltip />
+          <Legend />
+
+          {/* User's actual data */}
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke={getLineColor()}
+            strokeWidth={3}
+            dot={{ r: 5 }}
+            activeDot={{ r: 7 }}
+            name="实际数据"
+          />
+
+          {/* WHO Standard Curves */}
+          {showWHOCurves && whoData.size > 0 && (
+            <>
+              <Line
+                type="monotone"
+                dataKey="p3"
+                stroke="#ef4444"
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+                name="P3 (WHO)"
+              />
+              <Line
+                type="monotone"
+                dataKey="p15"
+                stroke="#f97316"
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+                name="P15 (WHO)"
+              />
+              <Line
+                type="monotone"
+                dataKey="p50"
+                stroke="#22c55e"
+                strokeWidth={1.5}
+                strokeDasharray="5 5"
+                dot={false}
+                name="P50 (WHO)"
+              />
+              <Line
+                type="monotone"
+                dataKey="p85"
+                stroke="#f97316"
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+                name="P85 (WHO)"
+              />
+              <Line
+                type="monotone"
+                dataKey="p97"
+                stroke="#ef4444"
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+                name="P97 (WHO)"
+              />
+            </>
+          )}
+        </LineChart>
+      </ResponsiveContainer>
+
+      {showWHOCurves && child.birthDate && child.gender && (
+        <div className="mt-4 text-sm text-gray-600">
+          <p className="font-medium mb-1">WHO儿童生长标准参考线说明：</p>
+          <ul className="list-disc list-inside space-y-1 text-xs">
+            <li>P3-P97: 正常范围（97%的儿童在此范围内）</li>
+            <li>P50: 中位数（50%的儿童在此值以上）</li>
+            <li>实线：您孩子的实际数据</li>
+            <li>虚线：WHO标准参考曲线</li>
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
-

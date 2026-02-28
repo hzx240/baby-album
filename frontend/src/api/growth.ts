@@ -96,6 +96,39 @@ export async function importGrowthRecordsCSV(
   return response.data;
 }
 
+/**
+ * WHO Standards Data
+ */
+export interface WHOStandardsData {
+  p3: number;
+  p15: number;
+  p50: number;
+  p85: number;
+  p97: number;
+}
+
+/**
+ * Get WHO growth standards for a specific measurement
+ */
+export async function getWHOStandards(
+  childId: string,
+  measurementType: 'height' | 'weight' | 'headCirc',
+  gender: 'male' | 'female',
+  ageMonths: number
+): Promise<WHOStandardsData> {
+  const response = await api.get<WHOStandardsData>(
+    `/api/children/${childId}/growth/who-standards`,
+    {
+      params: {
+        measurementType,
+        gender,
+        ageMonths,
+      },
+    }
+  );
+  return response.data;
+}
+
 export const growthApi = {
   getGrowthRecords,
   createGrowthRecord,
@@ -103,5 +136,6 @@ export const growthApi = {
   deleteGrowthRecord,
   exportGrowthRecordsCSV,
   importGrowthRecordsCSV,
+  getWHOStandards,
 };
 

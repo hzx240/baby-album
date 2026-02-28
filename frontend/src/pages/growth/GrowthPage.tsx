@@ -4,6 +4,7 @@ import { GrowthChart } from '@/components/growth/GrowthChart';
 import { GrowthRecordForm } from '@/components/growth/GrowthRecordForm';
 import { GrowthRecordList } from '@/components/growth/GrowthRecordList';
 import { useGrowthStore } from '@/stores/growth.store';
+import { useChildStore } from '@/stores/child.store';
 import type { GrowthRecord, CreateGrowthRecordRequest } from '@/types';
 
 type MeasurementType = 'height' | 'weight' | 'headCirc';
@@ -11,18 +12,28 @@ type MeasurementType = 'height' | 'weight' | 'headCirc';
 export default function GrowthPage() {
   const { childId } = useParams<{ childId: string }>();
   const { records, isLoading, fetchRecords, createRecord, updateRecord, deleteRecord } = useGrowthStore();
+  const { children, fetchChildren } = useChildStore();
 
   const [selectedMeasurementType, setSelectedMeasurementType] = useState<MeasurementType>('height');
   const [dateRange, setDateRange] = useState<'1m' | '3m' | '6m' | '1y' | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<GrowthRecord | null>(null);
 
-  // Fetch records when component mounts or childId changes
+  // Fetch children and records when component mounts or childId changes
+  useEffect(() => {
+    fetchChildren();
+  }, [fetchChildren]);
+
   useEffect(() => {
     if (childId) {
       fetchRecords(childId);
     }
   }, [childId, fetchRecords]);
+
+  // Find the current child
+  const currentChild = useMemo(() => {
+    return children.find((c) => c.id === childId);
+  }, [children, childId]);
 
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
@@ -73,7 +84,7 @@ export default function GrowthPage() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !currentChild) {
     return (
       <div className="container mx-auto px-4 py-8">
         <p className="text-gray-600">加载中...</p>
@@ -144,6 +155,8 @@ export default function GrowthPage() {
         <GrowthChart
           records={filteredRecords}
           measurementType={selectedMeasurementType}
+          child={currentChild}
+          childId={childId}
           dateRange={dateRange}
           showWHOCurves={true}
         />
