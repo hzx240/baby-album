@@ -1,0 +1,262 @@
+# ========================================
+# Prometheus 告警规则
+# ========================================
+
+groups:
+  # ========================================
+  # 服务可用性告警
+  # ========================================
+  - name: service_availability
+    interval: 30s
+    rules:
+      # 后端服务宕机
+      - alert: BackendServiceDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "后端服务宕机"
+          description: "后端服务 {{ $labels.instance }} 已宕机超过1分钟"
+
+      # 前端服务宕机
+      - alert: FrontendServiceDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: frontend
+        annotations:
+          summary: "前端服务宕机"
+          description: "前端服务 {{ $labels.instance }} 已宕机超过1分钟"
+
+      # PostgreSQL 宕机
+      - alert: PostgresServiceDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: dba
+        annotations:
+          summary: "PostgreSQL 数据库宕机"
+          description: "PostgreSQL 数据库 {{ $labels.instance }} 已宕机"
+
+      # Redis 宕机
+      - alert: RedisServiceDown
+        expr: up{job="redis-exporter"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "Redis 缓存服务宕机"
+          description: "Redis 缓存服务 {{ $labels.instance }} 已宕机"
+
+  # ========================================
+  # API 性能告警
+  # ========================================
+  - name: api_performance
+    interval: 30s
+    rules:
+      # API 响应时间过长
+      - alert: HighAPILatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="backend"}[5m])) by (le, path)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "API 响应时间过长"
+          description: "API 路径 {{ $labels.path }} 的 P95 延迟超过1秒"
+
+      # API 错误率过高
+      - alert: HighAPIErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="backend",status=~"5.."}[5m])) /
+          sum(rate(http_requests_total{job="backend"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "API 错误率过高"
+          description: "API 错误率超过5% (当前值: {{ $value | humanizePercentage }})"
+
+      # API 请求量突增
+      - alert: SuddenAPIRequestSpike
+        expr: |
+          sum(rate(http_requests_total{job="backend"}[5m])) >
+          3 * sum(rate(http_requests_total{job="backend"}[10m:5m]))
+        for: 2m
+        labels:
+          severity: info
+          team: backend
+        annotations:
+          summary: "API 请求量突增"
+          description: "API 请求量在最近2分钟内增长了2倍以上"
+
+  # ========================================
+  # 容器资源告警
+  # ========================================
+  - name: container_resources
+    interval: 30s
+    rules:
+      # 容器 CPU 使用率过高
+      - alert: ContainerHighCPU
+        expr: |
+          sum(rate(container_cpu_usage_seconds_total{name!=""}[5m])) by (name) >
+          0.8
+        for: 10m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "容器 CPU 使用率过高"
+          description: "容器 {{ $labels.name }} CPU 使用率超过80%"
+
+      # 容器内存使用率过高
+      - alert: ContainerHighMemory
+        expr: |
+          sum(container_memory_working_set_bytes{name!=""}) by (name) /
+          sum(container_spec_memory_limit_bytes{name!=""}) by (name) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "容器内存使用率过高"
+          description: "容器 {{ $labels.name }} 内存使用率超过90%"
+
+      # 容器 OOMKilled
+      - alert: ContainerOOMKilled
+        expr: |
+          rate(container_tasks_state{name!="",state="oomkilled"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: devops
+        annotations:
+          summary: "容器因内存不足被杀死"
+          description: "容器 {{ $labels.name }} 发生了 OOMKill"
+
+  # ========================================
+  # 数据库告警
+  # ========================================
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # 数据库连接数过高
+      - alert: PostgresTooManyConnections
+        expr: |
+          sum(pg_stat_database_numbackends{datname="babyalbum"}) /
+          sum(pg_settings_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "PostgreSQL 连接数过高"
+          description: "数据库连接使用率超过80%"
+
+      # 数据库复制延迟（如果配置了主从）
+      - alert: PostgresReplicationLag
+        expr: |
+          pg_replication_lag_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "PostgreSQL 复制延迟过高"
+          description: "复制延迟 {{ $value }} 秒"
+
+      # 数据库慢查询
+      - alert: PostgresSlowQueries
+        expr: |
+          rate(pg_stat_statements_calls_total{datname="babyalbum"}[5m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "PostgreSQL 慢查询增多"
+          description: "检测到大量慢查询"
+
+  # ========================================
+  # Redis 告警
+  # ========================================
+  - name: redis_alerts
+    interval: 30s
+    rules:
+      # Redis 内存使用率过高
+      - alert: RedisHighMemory
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "Redis 内存使用率过高"
+          description: "Redis 内存使用率超过90%"
+
+      # Redis 连接数过高
+      - alert: RedisTooManyConnections
+        expr: |
+          redis_connected_clients / redis_config_maxclients > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "Redis 连接数过高"
+          description: "Redis 连接使用率超过80%"
+
+      # Redis 缓存命中率过低
+      - alert: RedisLowHitRate
+        expr: |
+          rate(redis_keyspace_hits_total[5m]) /
+          (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) < 0.6
+        for: 15m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "Redis 缓存命中率过低"
+          description: "Redis 缓存命中率低于60%"
+
+  # ========================================
+  # 磁盘空间告警
+  # ========================================
+  - name: disk_space
+    interval: 30s
+    rules:
+      # 磁盘空间不足
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} /
+          node_filesystem_size_bytes{mountpoint="/"}) < 0.2
+        for: 5m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "磁盘空间不足"
+          description: "磁盘 {{ $labels.device }} 剩余空间低于20%"
+
+      # 磁盘空间严重不足
+      - alert: DiskSpaceCriticallyLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} /
+          node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 2m
+        labels:
+          severity: critical
+          team: devops
+        annotations:
+          summary: "磁盘空间严重不足"
+          description: "磁盘 {{ $labels.device }} 剩余空间低于10%"

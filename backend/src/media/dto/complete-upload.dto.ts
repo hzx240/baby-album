@@ -1,9 +1,16 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import { AllowedMimeType } from './request-upload.dto';
 
 export class CompleteUploadDto {
   @IsString()
   @IsNotEmpty()
   key: string;
+
+  @IsEnum(AllowedMimeType, {
+    message: 'contentType must be one of: image/jpeg, image/png, image/webp, image/heic',
+  })
+  @IsNotEmpty()
+  contentType: AllowedMimeType;
 
   @IsString()
   @IsNotEmpty()

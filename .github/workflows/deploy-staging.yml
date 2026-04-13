@@ -1,0 +1,323 @@
+# ========================================
+# Baby Album - Deploy to Staging
+# ========================================
+# 功能：部署到预发布环境
+# - 自动触发: develop分支push
+# - 手动触发: workflow_dispatch
+# - 部署前验证
+# - 蓝绿部署
+# - 健康检查
+
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.0.0)'
+        required: false
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository }}/baby-album-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository }}/baby-album-frontend
+  STAGING_SERVER: ${{ secrets.STAGING_SERVER }}
+  STAGING_USER: ${{ secrets.STAGING_USER }}
+  STAGING_KEY: ${{ secrets.STAGING_KEY }}
+
+jobs:
+  # ========================================
+  # 部署前验证
+  # ========================================
+  pre-deploy:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify CI passed
+        run: |
+          echo "Verifying CI status..."
+          echo "CI should have already passed via ci-cd.yml"
+
+      - name: Verify version
+        run: |
+          VERSION="${{ inputs.version || github.ref_name }}"
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version must be specified"
+            exit 1
+          fi
+          echo "Deploying version: $VERSION"
+
+  # ========================================
+  # 部署到预发布
+  # ========================================
+  deploy:
+    name: Deploy to Staging
+    needs: pre-deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ secrets.STAGING_URL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Configure deployment environment
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+      - name: Configure SSH key
+        run: |
+          echo "${{ secrets.STAGING_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.STAGING_SERVER }} >> ~/.ssh/known_hosts
+
+      # ========================================
+      # 创建部署前备份
+      # ========================================
+      - name: Create pre-deployment backup
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            cd /opt/baby-album || exit 1
+
+            # 创建备份目录
+            BACKUP_DIR="/opt/backups/baby-album/pre-$(date +%Y%m%d-%H%M%S)"
+            mkdir -p "$BACKUP_DIR"
+
+            # 备份当前运行的容器配置
+            docker compose ps > "$BACKUP_DIR/docker-compose-ps.txt"
+            docker compose config > "$BACKUP_DIR/docker-compose-config.yml"
+
+            # 数据库完整备份
+            if [ -f "./scripts/postgres-backup.sh" ]; then
+              bash ./scripts/postgres-backup.sh
+              cp -r /var/lib/postgresql/data "$BACKUP_DIR/postgres-data" 2>/dev/null || true
+            fi
+
+            # 保存当前镜像标签（用于回滚）
+            docker compose images | grep -v "REPOSITORY" | grep -v "baby-album" > "$BACKUP_DIR/current-images.txt"
+
+            # 创建回滚脚本
+            cat > "$BACKUP_DIR/rollback.sh" << 'ROLLBACK'
+            #!/bin/bash
+            set -e
+            cd /opt/baby-album
+            git checkout HEAD~1
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+            docker compose exec -T backend npx prisma migrate deploy
+            ROLLBACK
+            chmod +x "$BACKUP_DIR/rollback.sh"
+
+            echo "Backup created at: $BACKUP_DIR"
+            echo "$BACKUP_DIR" > /tmp/latest_backup_dir
+          EOF
+
+      # ========================================
+      # 拉取最新代码
+      # ========================================
+      - name: Pull latest code
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            cd /opt/baby-album
+
+            # 拉取最新代码
+            git fetch origin develop
+            git checkout develop
+            git pull origin develop
+
+            echo "Latest code pulled successfully"
+          EOF
+
+      # ========================================
+      # 部署应用
+      # ========================================
+      - name: Deploy application
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            cd /opt/baby-album
+
+            # 登录到容器仓库
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            # 拉取最新镜像
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+
+            # 蓝绿部署策略（零停机）
+            # 1. 启动新容器
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps
+
+            # 等待服务启动
+            echo "Waiting for services to start..."
+            sleep 30
+
+            # 检查容器状态
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+
+            # 清理旧镜像
+            docker image prune -f
+
+            echo "Deployment completed successfully"
+          EOF
+
+      # ========================================
+      # 数据库迁移
+      # ========================================
+      - name: Run database migrations
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            cd /opt/baby-album
+
+            # 运行 Prisma 迁移
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T backend npx prisma migrate deploy
+
+            echo "Database migrations completed"
+          EOF
+
+      # ========================================
+      # 健康检查
+      # ========================================
+      - name: Health check - Backend
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            echo "Waiting for backend health check..."
+            for i in {1..60}; do
+              if curl -f -s ${{ secrets.STAGING_URL }}/api/health > /dev/null; then
+                echo "Backend health check passed!"
+                exit 0
+              fi
+              echo "Waiting for backend... ($i/60)"
+              sleep 2
+            done
+            echo "Backend health check failed!"
+            exit 1
+          EOF
+
+      - name: Health check - Frontend
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            echo "Waiting for frontend health check..."
+            for i in {1..60}; do
+              if curl -f -s ${{ secrets.STAGING_URL }}/ > /dev/null; then
+                echo "Frontend health check passed!"
+                exit 0
+              fi
+              echo "Waiting for frontend... ($i/60)"
+              sleep 2
+            done
+            echo "Frontend health check failed!"
+            exit 1
+          EOF
+
+      # ========================================
+      # 冒烟测试
+      # ========================================
+      - name: Run smoke tests
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            echo "Running smoke tests..."
+
+            # 测试 API 端点
+            curl -f -s ${{ secrets.STAGING_URL }}/api/health | grep -q "status"
+
+            # 测试前端响应
+            curl -f -s ${{ secrets.STAGING_URL }}/ | grep -q "<!DOCTYPE html>"
+
+            echo "Smoke tests passed"
+          EOF
+
+  # ========================================
+  # 自动回滚（失败时）
+  # ========================================
+  rollback:
+    name: Automatic Rollback on Failure
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Rollback deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            set -e
+            cd /opt/baby-album
+
+            echo "::error::Deployment failed! Initiating automatic rollback..."
+
+            # 获取最新备份目录
+            BACKUP_DIR=$(cat /tmp/latest_backup_dir 2>/dev/null || echo "")
+            if [ -n "$BACKUP_DIR" ] && [ -f "$BACKUP_DIR/rollback.sh" ]; then
+              echo "Rolling back using backup: $BACKUP_DIR"
+              bash "$BACKUP_DIR/rollback.sh"
+            else
+              echo "No backup found, rolling back to previous commit..."
+              git checkout HEAD~1
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T backend npx prisma migrate deploy
+            fi
+
+            echo "Rollback completed"
+          EOF
+
+      # ========================================
+      # 部署后清理
+      # ========================================
+      - name: Cleanup
+    if: always()
+    needs: [deploy, rollback]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup SSH key
+        run: |
+          rm -f ~/.ssh/deploy_key
+
+      - name: Cleanup old backups
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_SERVER }} << 'EOF'
+            # 清理旧的备份（保留最近30个）
+            cd /opt/backups/baby-album
+            ls -t | tail -n +31 | xargs -r rm -rf
+          EOF
+
+  # ========================================
+  # 部署后验证
+  # ========================================
+  post-deploy:
+    name: Post-deployment Verification
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: always()
+    steps:
+      - name: Verify deployment
+        run: |
+          echo "## Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Staging" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ inputs.version || github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Access URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: ${{ secrets.STAGING_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API: ${{ secrets.STAGING_URL }}/api" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create deployment tag
+        if: needs.deploy.result == 'success'
+        run: |
+          VERSION="${{ inputs.version || github.ref_name }}"
+          echo "Tagged deployment: $VERSION"

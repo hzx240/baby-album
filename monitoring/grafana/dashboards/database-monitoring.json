@@ -1,0 +1,187 @@
+{
+  "dashboard": {
+    "title": "Baby Album - Database Monitoring",
+    "tags": ["baby-album", "database", "postgres"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Database Connections",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "pg_database_connections{datname=\"babyalbum\"}",
+            "legendFormat": "{{datname}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Cache Hit Ratio",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "pg_cache_hit_ratio{datname=\"babyalbum\"}",
+            "legendFormat": "Hit Ratio"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 90, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Connection Pool Usage",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "(sum(pg_database_connections{datname=\"babyalbum\"}) / sum(pg_settings_max_connections)) * 100",
+            "legendFormat": "Used %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 85, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Transactions",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(pg_commits_total[5m])",
+            "legendFormat": "Commits"
+          },
+          {
+            "expr": "rate(pg_rollbacks_total[5m])",
+            "legendFormat": "Rollbacks"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Table Sizes",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "pg_table_size_total_bytes",
+            "legendFormat": "{{tablename}}",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Blocks Read vs Hit",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_blks_hit[5m])",
+            "legendFormat": "Blocks Hit (from cache)"
+          },
+          {
+            "expr": "rate(pg_stat_database_blks_read[5m])",
+            "legendFormat": "Blocks Read (from disk)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Tuples Operations",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_tuples_returned[5m])",
+            "legendFormat": "Returned"
+          },
+          {
+            "expr": "rate(pg_stat_database_tuples_fetched[5m])",
+            "legendFormat": "Fetched"
+          },
+          {
+            "expr": "rate(pg_stat_database_tuples_inserted[5m])",
+            "legendFormat": "Inserted"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Locks",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 22},
+        "targets": [
+          {
+            "expr": "sum(pg_locks)",
+            "legendFormat": "Total Locks"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Dead Tuples",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 22},
+        "targets": [
+          {
+            "expr": "sum(pg_stat_user_tables_n_dead_tup)",
+            "legendFormat": "Dead Tuples"
+          }
+        ]
+      }
+    ]
+  }
+}

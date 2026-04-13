@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Family Space | The Sentient Archive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,400;0,600;0,700;1,400&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-fixed": "#a6feea",
+              "tertiary": "#295fa7",
+              "tertiary-container": "#92baff",
+              "on-secondary-fixed-variant": "#007060",
+              "error-container": "#f56965",
+              "on-secondary": "#e3fff6",
+              "secondary": "#006c5d",
+              "background": "#fbf9f5",
+              "on-secondary-fixed": "#005045",
+              "on-error": "#fff7f6",
+              "error": "#ac3434",
+              "surface-container-high": "#e9e8e3",
+              "surface-variant": "#e3e3dd",
+              "secondary-fixed-dim": "#98f0dc",
+              "inverse-primary": "#fd898a",
+              "error-dim": "#70030f",
+              "primary-fixed-dim": "#ff9695",
+              "on-tertiary-container": "#00366e",
+              "surface-container": "#efeee9",
+              "surface-container-low": "#f5f3ef",
+              "surface-container-highest": "#e3e3dd",
+              "on-primary-fixed": "#540710",
+              "outline": "#7a7b76",
+              "surface-bright": "#fbf9f5",
+              "on-surface-variant": "#5e605b",
+              "tertiary-fixed": "#92baff",
+              "on-tertiary-fixed": "#002046",
+              "on-primary-fixed-variant": "#7d272b",
+              "primary-container": "#ffaba9",
+              "inverse-on-surface": "#9e9d99",
+              "primary-fixed": "#ffaba9",
+              "inverse-surface": "#0e0e0d",
+              "on-secondary-container": "#006456",
+              "primary-dim": "#8f3538",
+              "on-surface": "#31332f",
+              "on-primary-container": "#711e23",
+              "on-primary": "#fff7f6",
+              "on-tertiary-fixed-variant": "#003f7e",
+              "on-tertiary": "#f8f8ff",
+              "secondary-container": "#a6feea",
+              "on-error-container": "#65000b",
+              "surface-tint": "#9f4043",
+              "surface": "#fbf9f5",
+              "tertiary-fixed-dim": "#7dacfa",
+              "tertiary-dim": "#18539a",
+              "on-background": "#31332f",
+              "surface-dim": "#dadad4",
+              "secondary-dim": "#005e51",
+              "primary": "#9f4043",
+              "surface-container-lowest": "#ffffff",
+              "outline-variant": "#b2b2ad"
+            },
+            fontFamily: {
+              "headline": ["Noto Serif"],
+              "body": ["Space Grotesk"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .font-notoSerif { font-family: 'Noto Serif', serif; }
+        .font-spaceGrotesk { font-family: 'Space Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container">
+<!-- SideNavBar -->
+<aside class="h-screen w-72 fixed left-0 top-0 rounded-r-[3rem] bg-rose-50/60 dark:bg-stone-900/60 backdrop-blur-xl flex flex-col py-12 px-8 z-50 shadow-[32px_0_64px_-12px_rgba(159,64,67,0.04)]">
+<div class="mb-12">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-primary-container">
+<img class="w-full h-full object-cover" data-alt="Soft focused portrait of a sleeping newborn baby with warm natural lighting and cream colored blankets" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGKqEfSgvkntwijAkYZZwSyWHMrl9CzA6jCGh9RYqSBTb5vmFZ0eNQRIBXMM8Q8p29DwZQkT7-p3lQS0S5EBlREG_9LZclUfLwoLOBKem6agADJ0QWFYElcAnjFHZSJHbptpL60Y_-nU0pJ2Vwzquq7yTsrO-uJ2u7_gwV5RxtZChnssKB2AE8ucMXEIIkQ3KUCk9uQy4mod6UuIe9EhP9700gnaOKeWiG8qTA8VTVYbNUgMOc6eENDYHUJnsqsz32gl78RaobSV0"/>
+</div>
+<div>
+<h1 class="text-2xl font-semibold text-rose-900 dark:text-rose-100 italic font-headline">The Sentient Archive</h1>
+<p class="font-notoSerif tracking-tight font-light text-rose-900/60 text-xs">Growth Journey</p>
+</div>
+</div>
+<button class="w-full py-4 px-6 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-bold shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+<span class="font-label uppercase tracking-widest text-xs">Add New Memory</span>
+</button>
+</div>
+<nav class="flex-1 space-y-4">
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="font-notoSerif tracking-tight font-light">Timeline</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="child_care">child_care</span>
+<span class="font-notoSerif tracking-tight font-light">Baby Profile</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-notoSerif tracking-tight font-light">Smart Albums</span>
+</a>
+<!-- Active State: Family Space -->
+<a class="flex items-center gap-4 py-3 px-4 text-rose-900 dark:text-rose-50 font-bold border-r-4 border-rose-800 dark:border-rose-300 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="family_restroom">family_restroom</span>
+<span class="font-notoSerif tracking-tight">Family Space</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+<span class="font-notoSerif tracking-tight font-light">Uploads</span>
+</a>
+</nav>
+<div class="pt-8 border-t border-rose-200/20 space-y-2">
+<a class="flex items-center gap-4 py-2 px-4 text-stone-500 hover:text-rose-700 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-xs uppercase tracking-widest font-label">Settings</span>
+</a>
+<a class="flex items-center gap-4 py-2 px-4 text-stone-500 hover:text-rose-700 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="text-xs uppercase tracking-widest font-label">Support</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="flex justify-between items-center ml-72 px-12 h-20 w-[calc(100%-18rem)] fixed top-0 bg-white/40 dark:bg-stone-950/40 backdrop-blur-md z-40">
+<div class="flex items-center gap-8">
+<div class="flex items-center bg-surface-container-highest px-4 py-2 rounded-full w-96">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm font-label w-full ml-2" placeholder="Search archive..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-rose-800 dark:text-rose-300 cursor-pointer" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-rose-800 dark:text-rose-300 cursor-pointer" data-icon="history_edu">history_edu</span>
+</div>
+<div class="h-8 w-px bg-outline-variant/30 mx-2"></div>
+<div class="flex items-center gap-3">
+<span class="font-label text-xs uppercase tracking-widest text-rose-800">Baby Switcher</span>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-low border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="Close-up of a smiling young guardian with friendly eyes in a bright, airy setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjAE6Tl9NxyP97h9frHYPlgx80YxE-WXaNBFdfBYdo6JtoSC79aMoz4UeO82A1JEFeIL1YcEfQUtd3Ue0aFpsmiAd-fuAGKJnv4NXyFmLbsxNy8I47BD2oHFxIVUlAi4fYNZpQZU5nibkX0ezMaDcm7mzqJKDg2a1Pc5kNBqveelLkIzpqsxMTjLaZZ2Mx3rQB_hWz6oV3Ev54scCUAKHGRJfN6y2KSEDQ-8qBiBJiMbXyffwRPJhA5YmqVeYsd14vedx4b4MFuP0"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-72 mt-20 p-12 min-h-screen">
+<div class="max-w-7xl mx-auto">
+<!-- Hero Header Section -->
+<section class="mb-12">
+<h2 class="text-5xl font-headline font-semibold text-on-surface mb-2">Family Space</h2>
+<p class="font-label text-on-surface-variant tracking-wide uppercase text-sm">Managing the circle of guardians for baby Elara's journey</p>
+</section>
+<div class="grid grid-cols-12 gap-8 items-start">
+<!-- Left Column: Member Management -->
+<div class="col-span-8 space-y-8">
+<!-- Invite Action Card -->
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.04)] flex items-center justify-between">
+<div class="flex gap-6 items-center">
+<div class="w-24 h-24 bg-surface-container-high rounded-lg flex items-center justify-center p-2">
+<div class="w-full h-full bg-white rounded-sm flex items-center justify-center border border-outline-variant/10">
+<span class="material-symbols-outlined text-4xl text-rose-900" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
+</div>
+</div>
+<div>
+<h3 class="font-headline text-xl font-bold text-on-surface mb-1">Invite New Member</h3>
+<p class="text-on-surface-variant text-sm font-label max-w-xs">Share secure access via unique QR or invitation link. Codes expire in 24 hours.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-3 bg-surface-container-highest rounded-full font-label text-xs font-bold uppercase tracking-widest hover:bg-surface-container transition-colors">Copy Link</button>
+<button class="px-8 py-3 bg-primary text-on-primary rounded-full font-label text-xs font-bold uppercase tracking-widest shadow-md hover:bg-primary-dim transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                                Generate QR
+                            </button>
+</div>
+</div>
+<!-- Member List -->
+<div class="bg-surface-container-low rounded-xl p-8">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline text-2xl font-semibold">Active Guardians</h3>
+<span class="font-label text-xs uppercase font-bold text-rose-800 bg-rose-100 px-3 py-1 rounded-full">4 Members Total</span>
+</div>
+<div class="space-y-4">
+<!-- Member Row 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg flex items-center justify-between group hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a woman with a warm smile, soft studio lighting, high-end editorial look" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnJHgM5DQjIRxg7P3vts9noG88IiVYnc0BabxN1BCu62JUEH3qDyVXAkpaigKWvWBeRAeQItLqWtmIgW52NyiZ25b-ZI3x6nPydYZYf7moaIbdlA4JHJw0ctlQrPHU_KnpzqtvGARqlVqfZsJ27NfyPzyU5etYcQywS183yBqbNG76iukpTLG7XFZmUhmrsl0NxchfISZjxVr_lDqSZXIbP27ZWoCznh0m4sOk7ODuicZ_zlrY76KpKqS2CXC_yfzh-9Zt0OTm3GY"/>
+</div>
+<div>
+<h4 class="font-label font-bold text-on-surface">Sarah Johnson</h4>
+<p class="text-xs text-on-surface-variant">Primary Parent • sarah.j@archive.io</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary-container/20 px-3 py-1 rounded-full">Admin</span>
+<button class="text-stone-400 hover:text-rose-900 transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+</div>
+<!-- Member Row 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up of a man in casual attire, friendly expression, natural sunlight and blurry park background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAX4yc_HxXYMdr4oOYB2MGICSN7eBsMkbvNt5XCm13XLs4UC1FGu9rlpJeGL7hYIBDb9TTjh6k4DA7EV5u-4sbIh5UGWLyZjldeNGfjRJXApsoe88qQ41xWi3zXiVN1EMPTPErjZRanHPvZCpXqTgDx3WznexE75PeWupyCvHcfxdv1j8sDoZwebBB79C9sxrMklJn2vj9a-7OJ_99lsgky8FhNhkWPYD1GDq_-Zww1FYRNQeNvb83w7X0bKcPTDpoy8_r-LfaZ6sI"/>
+</div>
+<div>
+<h4 class="font-label font-bold text-on-surface">Marcus Chen</h4>
+<p class="text-xs text-on-surface-variant">Uncle • m.chen@family.com</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-container/20 px-3 py-1 rounded-full">Contributor</span>
+<button class="text-stone-400 hover:text-rose-900 transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+</div>
+<!-- Member Row 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of an elderly woman with gentle features and a kind smile, soft warm indoor lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqJR9jEOI3DeJmblmBUwjQGencdC7e43xgVKvodqlVSZ-zrHchzFr6jfeFP2lElnM1iYy3TgX2WkEdMIcGAuepaH_GXv0vscZHrQ4WTTbY3sAbag_Bioh-ZKpbwkwJJLkY8QrlLtZeV2E4fU0KCOs0CGofMRtdI1uUkAJdvCOCn_1Q3tkEhjqxjAkCUOvXsN-z_LuB-KlRmLVien7ttxJGjBIHJEn1OWyJnMiF63oy9wqcds1FAWzlfxeVSt75AIZrVfjC1wfzHn0"/>
+</div>
+<div>
+<h4 class="font-label font-bold text-on-surface">Helena Smith</h4>
+<p class="text-xs text-on-surface-variant">Grandmother • helena@grandma.net</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-[10px] font-bold uppercase tracking-widest text-tertiary bg-tertiary-container/20 px-3 py-1 rounded-full">Viewer</span>
+<button class="text-stone-400 hover:text-rose-900 transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+</div>
+<!-- Member Row 4 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg flex items-center justify-between group opacity-60">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">pending</span>
+</div>
+<div>
+<h4 class="font-label font-bold text-on-surface italic">Awaiting Acceptance...</h4>
+<p class="text-xs text-on-surface-variant">Invite sent to David@work.com</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-rose-900 font-label text-[10px] uppercase font-bold hover:underline">Revoke</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Activity Feed -->
+<div class="col-span-4 space-y-8">
+<!-- Activity Feed Section -->
+<div class="bg-white/40 backdrop-blur-md rounded-xl p-8 border border-white/20">
+<h3 class="font-headline text-xl font-bold mb-8">Pulse Activity</h3>
+<div class="relative">
+<!-- Timeline Beacon Logic -->
+<div class="absolute left-3 top-0 bottom-0 w-px bg-rose-200/50"></div>
+<div class="space-y-10 relative">
+<!-- Activity Item 1 -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-white border-4 border-primary shadow-sm flex-shrink-0"></div>
+<div>
+<p class="text-xs font-label uppercase font-bold tracking-widest text-rose-900 mb-1">2 Hours Ago</p>
+<p class="text-sm font-label text-on-surface">
+<span class="font-bold">Marcus Chen</span> uploaded 4 photos to 
+                                            <span class="text-secondary italic">"Bath Time Fun"</span>
+</p>
+<div class="mt-3 flex gap-2">
+<div class="w-12 h-12 rounded-sm bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up of baby's tiny hand splashing in warm soapy water with gentle bubbles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDGyCreiXL0Gm6dObYrukYJv0-dneOAWJSrs6KcMDtxz4kutPp-Ovx2mz9yWOepUoeBitP9hq7YPwlpGuEJZd18XpaMczHT3q832zxcQUSWWYA6iyast5580BOZUyoFs9rf0j4d5YdlxyiXM3k1z2dC8gbHGP-xojM_9MbsJ3FaJK30adMo1El9comtCkbTbxmeDyE7QKH5b1RDe5QLpdfkNDT-7Flkr9uoV79KldBf8ZRwPGpCBGY3D_faJw7lb7dDCT4PPCLky4"/>
+</div>
+<div class="w-12 h-12 rounded-sm bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Blurred background of baby towels and organic bath products in soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfW6fOrqx3RtSZYy0TLeqw4fLipjPOsLScJtnynk7lhFZMbUv1XfYbvfRXJYbfrap8xx67BJ8OupJLpiXmrvpE0hsOzuNVzStkDHuPIzR6jJxn5jwzFwfBn6djCcBJ3TwhJia9Et8xuhgYom9-iWEhzyUyrflkZ4v-yjPcxQtjZ2ey5-ujkW0IQZXJrhOUyRMVxAzT3BZNtxLFYQ0IMF4YaCPo5jxtuHhN6o8x9RKGs5crcFlX6Y9LKTY5ns3U02KN8N1W32OWJ6c"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-white border-4 border-secondary shadow-sm flex-shrink-0"></div>
+<div>
+<p class="text-xs font-label uppercase font-bold tracking-widest text-secondary mb-1">Yesterday</p>
+<p class="text-sm font-label text-on-surface">
+<span class="font-bold">Helena Smith</span> commented on 
+                                            <span class="text-primary italic">"First Steps"</span>: 
+                                            <span class="text-on-surface-variant italic">"So proud of her! This brings back so many memories."</span>
+</p>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-white border-4 border-tertiary shadow-sm flex-shrink-0"></div>
+<div>
+<p class="text-xs font-label uppercase font-bold tracking-widest text-tertiary mb-1">Oct 12</p>
+<p class="text-sm font-label text-on-surface">
+<span class="font-bold">Sarah Johnson</span> updated the 
+                                            <span class="text-tertiary italic">Privacy Protocol</span> for Contributor role.
+                                        </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Permissions Summary Card -->
+<div class="bg-surface-container-highest rounded-xl p-8">
+<span class="material-symbols-outlined text-rose-900 mb-4" data-weight="fill">verified_user</span>
+<h4 class="font-headline text-lg font-bold mb-2 text-on-surface">Secure Collaboration</h4>
+<p class="text-sm text-on-surface-variant font-body leading-relaxed">
+                            Only Admins can invite new members or export full archives. Contributors are restricted from permanent deletion of original biometric growth data.
+                        </p>
+<a class="inline-block mt-4 font-label text-xs font-bold uppercase tracking-widest text-rose-800 hover:text-primary transition-colors" href="#">View Permissions Matrix →</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="flex justify-between items-center px-12 py-4 w-[calc(100%-18rem)] fixed bottom-0 ml-72 bg-stone-100 dark:bg-stone-900 z-30">
+<p class="font-spaceGrotesk text-[10px] uppercase font-bold text-teal-700 dark:text-teal-400 italic">© 2024 The Sentient Archive | Secure Digital Heirloom</p>
+<div class="flex gap-8">
+<a class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-all" href="#">Privacy Protocol</a>
+<a class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-all" href="#">Archive Export</a>
+<a class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-all" href="#">Family Access</a>
+</div>
+</footer>
+</body></html>

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { photoApi } from '@/api/photo';
 import PhotoViewer from '@/components/PhotoViewer';
+import { CommentThread } from '@/components/photo/CommentThread';
 import type { Photo } from '@/types';
 
 export default function PhotoDetailPage() {
-  const { photoId } = useParams();
+  const { photoId, familyId } = useParams();
   const navigate = useNavigate();
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -78,21 +79,24 @@ export default function PhotoDetailPage() {
   };
 
   const handleViewerDelete = async (deletedPhotoId: string) => {
-    await photoApi.deletePhoto(deletedPhotoId);
-    const remainingPhotos = allPhotos.filter((p) => p.id !== deletedPhotoId);
+    try {
+      await photoApi.deletePhoto(deletedPhotoId);
+      const remainingPhotos = allPhotos.filter((p) => p.id !== deletedPhotoId);
 
-    if (remainingPhotos.length === 0) {
-      navigate('/photos');
-      return;
+      if (remainingPhotos.length === 0) {
+        navigate('/photos');
+        return;
+      }
+
+      const newIndex = Math.min(currentIndex, remainingPhotos.length - 1);
+      const nextPhoto = remainingPhotos[newIndex];
+      navigate(`/photos/${nextPhoto.id}`);
+
+      setAllPhotos(remainingPhotos);
+      setCurrentIndex(newIndex);
+    } catch (err: any) {
+      setError(err.response?.data?.message || '删除失败');
     }
-
-    // Navigate to next or previous photo
-    const newIndex = Math.min(currentIndex, remainingPhotos.length - 1);
-    const nextPhoto = remainingPhotos[newIndex];
-    navigate(`/photos/${nextPhoto.id}`);
-
-    setAllPhotos(remainingPhotos);
-    setCurrentIndex(newIndex);
   };
 
   const handleViewerDownload = async (downloadPhotoId: string, url: string) => {
@@ -325,6 +329,11 @@ export default function PhotoDetailPage() {
             <span>删除照片后无法恢复，请谨慎操作</span>
           </li>
         </ul>
+      </div>
+
+      {/* 评论区 */}
+      <div className="mt-6 bg-white rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '250ms', boxShadow: '0 4px 20px rgba(255,107,157,0.08)' }}>
+        <CommentThread photoId={photo.id} />
       </div>
 
       {/* Photo Viewer */}

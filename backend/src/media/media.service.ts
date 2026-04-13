@@ -17,13 +17,21 @@ import sharp from 'sharp';
 import { RequestUploadDto } from './dto/request-upload.dto';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
 import { QueryMediaDto } from './dto/query-media.dto';
+import { QueueService } from '../common/queue.service';
+import { FileValidationService } from '../common/file-validation.service';
 
 @Injectable()
 export class MediaService {
+  private readonly IMAGE_PROCESSING_QUEUE = 'image-processing';
+
   constructor(
     private prisma: PrismaService,
     private s3Config: S3Config,
-  ) {}
+    private queue: QueueService,
+    private fileValidator: FileValidationService,
+  ) {
+    this.queue.registerQueue(this.IMAGE_PROCESSING_QUEUE);
+  }
 
   /**
    * Request a presigned URL for direct upload to S3
@@ -89,7 +97,87 @@ export class MediaService {
   }
 
   /**
-   * Complete upload and process the photo
+   * Process image in background queue
+   */
+  private async processImage(key: string, checksum: string, childId: string | undefined) {
+    try {
+      // Download the original image from S3
+      const getObjectCommand = new GetObjectCommand({
+        Bucket: this.s3Config.getBucketName(),
+        Key: key,
+      });
+
+      const response = await this.s3Config.getClient().send(getObjectCommand);
+      const originalBuffer = await this.streamToBuffer(response.Body);
+
+      // Parallel image processing with Sharp
+      const image = sharp(originalBuffer);
+      const [metadata, resizedBuffer, thumbnailBuffer] = await Promise.all([
+        image.metadata(),
+        image
+          .clone()
+          .resize(1920, 1920, {
+            fit: 'inside',
+            withoutEnlargement: true,
+          })
+          .jpeg({ quality: 85 })
+          .toBuffer(),
+        image
+          .clone()
+          .resize(400, 400, {
+            fit: 'inside',
+            withoutEnlargement: false,
+          })
+          .jpeg({ quality: 80 })
+          .toBuffer(),
+      ]);
+
+      // Parallel upload to S3
+      const resizedKey = key.replace('/original', '/resized');
+      const thumbKey = key.replace('/original', '/thumb');
+      await Promise.all([
+        this.s3Config.getClient().send(
+          new PutObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: resizedKey,
+            Body: resizedBuffer,
+            ContentType: 'image/jpeg',
+          }),
+        ),
+        this.s3Config.getClient().send(
+          new PutObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: thumbKey,
+            Body: thumbnailBuffer,
+            ContentType: 'image/jpeg',
+          }),
+        ),
+      ]);
+
+      // Find photo by originalKey and update with processed keys
+      const photo = await this.prisma.photo.findFirst({
+        where: { originalKey: key },
+      });
+
+      if (photo) {
+        await this.prisma.photo.update({
+          where: { id: photo.id },
+          data: {
+            resizedKey,
+            thumbKey,
+            fileSize: originalBuffer.length,
+            mimeType: metadata.format || 'image/jpeg',
+            childId: childId || null,
+          },
+        });
+      }
+    } catch (error) {
+      throw new BadRequestException('文件处理失败: ' + error.message);
+    }
+  }
+
+  /**
+   * Complete upload and queue photo processing
    */
   async completeUpload(
     userId: string,
@@ -119,48 +207,96 @@ export class MediaService {
       const response = await this.s3Config.getClient().send(getObjectCommand);
       const originalBuffer = await this.streamToBuffer(response.Body);
 
-      // Generate resized version - 保持原始宽高比，不裁剪
-      const resizedBuffer = await sharp(originalBuffer)
-        .resize(1920, 1920, {
-          fit: 'inside',      // 保持宽高比，不裁剪
-          withoutEnlargement: true,
-        })
-        .jpeg({ quality: 85 })
-        .toBuffer();
+      // 🔒 SECURITY: Validate file type using magic numbers
+      // This prevents malicious file uploads with fake MIME types
+      try {
+        this.fileValidator.validateFileByMagicNumber(
+          originalBuffer,
+          dto.contentType as RequestUploadDto['contentType'],
+        );
+      } catch (error) {
+        // Delete invalid file from S3
+        await this.s3Config.getClient().send(
+          new DeleteObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: originalKey,
+          }),
+        );
+        throw error;
+      }
 
-      // Generate thumbnail - 保持原始宽高比，不裁剪
-      const thumbnailBuffer = await sharp(originalBuffer)
-        .resize(400, 400, {
-          fit: 'inside',      // 改为 inside，保持宽高比不裁剪
-          withoutEnlargement: false,  // 允许放大小图
-        })
-        .jpeg({ quality: 80 })
-        .toBuffer();
+      // 🔒 SECURITY: Verify it's a valid image using Sharp
+      const image = sharp(originalBuffer);
+      const metadata = await image.metadata();
 
-      // Extract metadata
-      const metadata = await sharp(originalBuffer).metadata();
+      // Verify format matches declared content type
+      const formatToMimeType: Record<string, string> = {
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        webp: 'image/webp',
+        heif: 'image/heic',
+        heic: 'image/heic',
+      };
 
-      // Upload resized version
+      const detectedMimeType = formatToMimeType[metadata.format || ''];
+
+      if (!detectedMimeType || detectedMimeType !== dto.contentType) {
+        // Delete invalid file from S3
+        await this.s3Config.getClient().send(
+          new DeleteObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: originalKey,
+          }),
+        );
+
+        throw new BadRequestException(
+          `Image format mismatch: declared ${dto.contentType}, detected ${detectedMimeType || 'unknown'}`,
+        );
+      }
+
+      // Parallel image processing with Sharp
+      const processImage = sharp(originalBuffer);
+      const [processMetadata, resizedBuffer, thumbnailBuffer] = await Promise.all([
+        processImage.metadata(),
+        processImage
+          .clone()
+          .resize(1920, 1920, {
+            fit: 'inside',
+            withoutEnlargement: true,
+          })
+          .jpeg({ quality: 85 })
+          .toBuffer(),
+        processImage
+          .clone()
+          .resize(400, 400, {
+            fit: 'inside',
+            withoutEnlargement: false,
+          })
+          .jpeg({ quality: 80 })
+          .toBuffer(),
+      ]);
+
+      // Parallel upload to S3
       const resizedKey = originalKey.replace('/original', '/resized');
-      await this.s3Config.getClient().send(
-        new PutObjectCommand({
-          Bucket: this.s3Config.getBucketName(),
-          Key: resizedKey,
-          Body: resizedBuffer,
-          ContentType: 'image/jpeg',
-        }),
-      );
-
-      // Upload thumbnail
       const thumbKey = originalKey.replace('/original', '/thumb');
-      await this.s3Config.getClient().send(
-        new PutObjectCommand({
-          Bucket: this.s3Config.getBucketName(),
-          Key: thumbKey,
-          Body: thumbnailBuffer,
-          ContentType: 'image/jpeg',
-        }),
-      );
+      await Promise.all([
+        this.s3Config.getClient().send(
+          new PutObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: resizedKey,
+            Body: resizedBuffer,
+            ContentType: 'image/jpeg',
+          }),
+        ),
+        this.s3Config.getClient().send(
+          new PutObjectCommand({
+            Bucket: this.s3Config.getBucketName(),
+            Key: thumbKey,
+            Body: thumbnailBuffer,
+            ContentType: 'image/jpeg',
+          }),
+        ),
+      ]);
 
       // Save photo metadata to database
       const photo = await this.prisma.photo.create({
@@ -224,10 +360,6 @@ export class MediaService {
       }
     }
 
-    // Get total count
-    const total = await this.prisma.photo.count({ where });
-
-    // Get photos with pagination
     const orderBy: any = {};
     if (query.sortBy === 'takenAt') {
       orderBy.takenAt = query.sortOrder;
@@ -235,15 +367,29 @@ export class MediaService {
       orderBy.uploadedAt = query.sortOrder;
     }
 
-    const photos = await this.prisma.photo.findMany({
-      where,
-      orderBy,
-      skip: ((query.page || 1) - 1) * (query.limit || 50),
-      take: query.limit || 50,
-      include: {
-        tags: true,
-      },
-    });
+    const [total, photos] = await this.prisma.$transaction([
+      this.prisma.photo.count({ where }),
+      this.prisma.photo.findMany({
+        where,
+        orderBy,
+        skip: ((query.page || 1) - 1) * (query.limit || 50),
+        take: query.limit || 50,
+        select: {
+          id: true,
+          familyId: true,
+          childId: true,
+          uploaderId: true,
+          originalKey: true,
+          resizedKey: true,
+          thumbKey: true,
+          takenAt: true,
+          uploadedAt: true,
+          fileSize: true,
+          mimeType: true,
+          tags: { select: { tag: true } },
+        },
+      }),
+    ]);
 
     return {
       data: photos.map((photo) => ({
@@ -275,8 +421,19 @@ export class MediaService {
   async getPhoto(userId: string, photoId: string) {
     const photo = await this.prisma.photo.findUnique({
       where: { id: photoId },
-      include: {
-        tags: true,
+      select: {
+        id: true,
+        familyId: true,
+        childId: true,
+        uploaderId: true,
+        originalKey: true,
+        resizedKey: true,
+        thumbKey: true,
+        takenAt: true,
+        uploadedAt: true,
+        fileSize: true,
+        mimeType: true,
+        tags: { select: { tag: true } },
       },
     });
 

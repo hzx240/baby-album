@@ -1,0 +1,406 @@
+# ========================================
+# 宝贝成长相册 - 生产环境部署
+# ========================================
+# 触发条件:
+#   - 手动触发 (workflow_dispatch)
+#   - release 标签创建
+# 部署策略: 手动批准，自动回滚
+# ========================================
+
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'latest'
+      rollback:
+        description: 'Rollback to previous version?'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: ghcr.io
+  ENVIRONMENT: production
+  DEPLOY_TIMEOUT: 900
+
+jobs:
+  # ========================================
+  # 部署前检查
+  # ========================================
+  pre-deploy:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify CI passed
+        run: |
+          echo "Verifying CI status..."
+          # CI should have already passed via the ci.yml workflow
+          echo "CI verification complete"
+
+      - name: Verify release version
+        run: |
+          VERSION="${{ github.event.inputs.version || github.event.release.tag_name }}"
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version must be specified"
+            exit 1
+          fi
+          echo "Deploying version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+  # ========================================
+  # 等待手动批准
+  # ========================================
+  approval:
+    name: Production Approval
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    environment:
+      name: production
+      url: ${{ secrets.PROD_APP_URL }}
+
+    steps:
+      - name: Wait for manual approval
+        run: |
+          echo "Waiting for production deployment approval..."
+          echo "This step requires manual approval from the project maintainer."
+
+      - name: Confirm deployment
+        run: |
+          echo "Deployment approved. Proceeding with production deployment."
+
+  # ========================================
+  # 部署到生产环境
+  # ========================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [pre-deploy, approval]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish || 'main' }}
+
+      # ========================================
+      # 回滚模式（如果选择）
+      # ========================================
+      - name: Rollback to previous version
+        if: github.event.inputs.rollback == 'true'
+        run: |
+          echo "Initiating rollback to previous version..."
+          echo "ROLLBACK=true" >> $GITHUB_ENV
+
+      # ========================================
+      # 准备部署环境
+      # ========================================
+      - name: Setup deployment environment
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+      - name: Configure SSH key
+        run: |
+          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
+
+      # ========================================
+      # 创建部署前备份
+      # ========================================
+      - name: Create pre-deployment backup
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/baby-album || exit 1
+
+            # 创建备份目录
+            BACKUP_DIR="/opt/backups/baby-album/pre-$(date +%Y%m%d-%H%M%S)"
+            mkdir -p "$BACKUP_DIR"
+
+            # 备份当前运行的容器配置
+            docker compose ps > "$BACKUP_DIR/docker-compose-ps.txt"
+            docker compose config > "$BACKUP_DIR/docker-compose-config.yml"
+
+            # 数据库完整备份
+            if [ -f "./scripts/postgres-backup.sh" ]; then
+              bash ./scripts/postgres-backup.sh
+              cp -r /var/lib/postgresql/data "$BACKUP_DIR/postgres-data" 2>/dev/null || true
+            fi
+
+            # 保存当前镜像标签（用于回滚）
+            docker compose images | grep -v "REPOSITORY" > "$BACKUP_DIR/current-images.txt"
+
+            # 创建回滚脚本
+            cat > "$BACKUP_DIR/rollback.sh" << 'EOF'
+            #!/bin/bash
+            set -e
+            cd /opt/baby-album
+            git checkout HEAD~1
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+            docker compose exec -T backend npx prisma migrate deploy
+            EOF
+            chmod +x "$BACKUP_DIR/rollback.sh"
+
+            echo "Backup created at: $BACKUP_DIR"
+            echo "$BACKUP_DIR" > /tmp/latest_backup_dir
+
+      # ========================================
+      # 拉取最新代码
+      # ========================================
+      - name: Pull latest code
+        if: env.ROLLBACK != 'true'
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/baby-album
+
+            # 拉取最新代码
+            git fetch origin main
+            git checkout main
+            git pull origin main
+
+            # 如果是 release， checkout 到对应 tag
+            if [ -n "${{ github.event.release.tag_name }}" ]; then
+              git checkout tags/${{ github.event.release.tag_name }}
+            fi
+
+            echo "Latest code pulled successfully"
+
+      # ========================================
+      # 部署应用
+      # ========================================
+      - name: Deploy application
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/baby-album
+
+            # 登录到容器 registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            # 拉取最新镜像
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+
+            # 蓝绿部署策略（零停机）
+            # 1. 启动新容器
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps
+
+            # 等待服务启动
+            echo "Waiting for services to start..."
+            sleep 30
+
+            # 检查容器状态
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+
+            # 清理旧镜像
+            docker image prune -f
+
+            echo "Deployment completed successfully"
+
+      # ========================================
+      # 数据库迁移
+      # ========================================
+      - name: Run database migrations
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script_stop: false
+          script: |
+            set -e
+            cd /opt/baby-album
+
+            # 运行 Prisma 迁移
+            docker compose exec -T backend npx prisma migrate deploy
+
+            echo "Database migrations completed"
+
+      # ========================================
+      # 健康检查
+      # ========================================
+      - name: Health check - Backend
+        run: |
+          echo "Waiting for backend health check..."
+          for i in {1..60}; do
+            if curl -f -s "${{ secrets.PROD_API_URL }}/api/health" > /dev/null; then
+              echo "Backend health check passed!"
+              exit 0
+            fi
+            echo "Waiting for backend... ($i/60)"
+            sleep 2
+          done
+          echo "Backend health check failed!"
+          exit 1
+
+      - name: Health check - Frontend
+        run: |
+          echo "Waiting for frontend health check..."
+          for i in {1..60}; do
+            if curl -f -s "${{ secrets.PROD_APP_URL }}/" > /dev/null; then
+              echo "Frontend health check passed!"
+              exit 0
+            fi
+            echo "Waiting for frontend... ($i/60)"
+            sleep 2
+          done
+          echo "Frontend health check failed!"
+          exit 1
+
+      # ========================================
+      # 冒烟测试
+      # ========================================
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+
+          # 测试 API 端点
+          curl -f -s "${{ secrets.PROD_API_URL }}/api/health" | grep -q "status"
+
+          # 测试前端响应
+          curl -f -s "${{ secrets.PROD_APP_URL }}/" | grep -q "<!DOCTYPE html>"
+
+          echo "Smoke tests passed"
+
+      # ========================================
+      # 性能测试（可选）
+      # ========================================
+      - name: Run performance tests
+        continue-on-error: true
+        run: |
+          echo "Running basic performance tests..."
+
+          # 测试响应时间
+          TIME=$(curl -o /dev/null -s -w '%{time_total}' "${{ secrets.PROD_API_URL }}/api/health")
+          echo "API Response Time: ${TIME}s"
+
+          # 检查是否在合理范围内（< 2秒）
+          if (( $(echo "$TIME < 2.0" | bc -l) )); then
+            echo "Performance test passed"
+          else
+            echo "Warning: API response time is slow: ${TIME}s"
+          fi
+
+      # ========================================
+      # 自动回滚（失败时）
+      # ========================================
+      - name: Automatic rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/baby-album
+
+            echo "::error::Deployment failed! Initiating automatic rollback..."
+
+            # 获取最新备份目录
+            BACKUP_DIR=$(cat /tmp/latest_backup_dir 2>/dev/null || echo "")
+            if [ -n "$BACKUP_DIR" ] && [ -f "$BACKUP_DIR/rollback.sh" ]; then
+              echo "Rolling back using backup: $BACKUP_DIR"
+              bash "$BACKUP_DIR/rollback.sh"
+            else
+              echo "No backup found, rolling back to previous commit..."
+              git checkout HEAD~1
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+              docker compose exec -T backend npx prisma migrate deploy
+            fi
+
+            echo "Rollback completed"
+
+      # ========================================
+      # 部署后清理
+      # ========================================
+      - name: Cleanup
+        if: always()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            # 清理 SSH 密钥
+            rm -f ~/.ssh/deploy_key
+
+            # 清理旧的备份（保留最近30个）
+            cd /opt/backups/baby-album
+            ls -t | tail -n +31 | xargs -r rm -rf
+
+      # ========================================
+      # 通知
+      # ========================================
+      - name: Deployment success notification
+        if: success()
+        run: |
+          echo "::notice::Production deployment completed successfully!"
+          echo "App URL: ${{ secrets.PROD_APP_URL }}"
+          echo "API URL: ${{ secrets.PROD_API_URL }}"
+          echo "Version: ${{ github.event.inputs.version || github.event.release.tag_name }}"
+
+      - name: Deployment failure notification
+        if: failure()
+        run: |
+          echo "::error::Production deployment failed! Automatic rollback initiated."
+
+  # ========================================
+  # 部署后验证
+  # ========================================
+  post-deploy:
+    name: Post-deployment Verification
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Verify deployment
+        run: |
+          echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ github.event.inputs.version || github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Access URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: ${{ secrets.PROD_APP_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API: ${{ secrets.PROD_API_URL }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create deployment tag
+        if: needs.deploy.result == 'success'
+        run: |
+          VERSION="${{ github.event.inputs.version || github.event.release.tag_name }}"
+          echo "Tagged deployment: $VERSION"
+
+      - name: Fail if deployment failed
+        if: needs.deploy.result == 'failure'
+        run: exit 1

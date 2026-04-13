@@ -1,0 +1,175 @@
+version: '3.8'
+
+# ========================================
+# 生产环境 Docker Compose 配置
+# ========================================
+# 使用方法：docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# 特点：
+# - 资源限制
+# - 日志轮转
+# - 优化参数
+# - 安全加固
+
+services:
+  # ========================================
+  # 前端服务 - 生产配置
+  # ========================================
+  frontend:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=frontend,env=production"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:size=10m
+      - /var/run:size=5m
+      - /tmp:size=10m
+
+  # ========================================
+  # 后端服务 - 生产配置
+  # ========================================
+  backend:
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=backend,env=production"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - NODE_ENV=production
+      - THROTTLE_TTL=${THROTTLE_TTL:-60}
+      - THROTTLE_LIMIT=${THROTTLE_LIMIT:-100}
+
+  # ========================================
+  # PostgreSQL - 生产配置
+  # ========================================
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "service=postgres,env=production"
+    security_opt:
+      - no-new-privileges:true
+    # 额外的性能调优
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=1310kB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "synchronous_commit=off"
+      - "-c"
+      - "fsync=on"
+
+  # ========================================
+  # MinIO - 生产配置
+  # ========================================
+  minio:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "service=minio,env=production"
+    security_opt:
+      - no-new-privileges:true
+
+  # ========================================
+  # Redis - 生产配置
+  # ========================================
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+        labels: "service=redis,env=production"
+    security_opt:
+      - no-new-privileges:true
+    # Redis 生产配置
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 200mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --tcp-backlog 511
+      --tcp-keepalive 300

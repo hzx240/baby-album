@@ -72,6 +72,27 @@ export const photoApi = {
   },
 
   /**
+   * Batch get presigned URLs for multiple photos
+   */
+  getPhotoUrlsBatch: async (
+    photoIds: string[],
+    size: 'original' | 'resized' | 'thumb' = 'resized'
+  ): Promise<Map<string, string>> => {
+    const requests = photoIds.map(photoId =>
+      api.get<PhotoUrlResponse>(`${API_ROUTES.PHOTO_URL(photoId)}?size=${size}`)
+    );
+
+    const responses = await Promise.all(requests);
+    const urlMap = new Map<string, string>();
+
+    responses.forEach((response, index) => {
+      urlMap.set(photoIds[index], response.data.url);
+    });
+
+    return urlMap;
+  },
+
+  /**
    * Delete photo
    */
   deletePhoto: async (photoId: string): Promise<void> => {

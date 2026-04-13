@@ -1,0 +1,107 @@
+version: '3.8'
+
+# ========================================
+# 开发环境 Docker Compose 配置
+# ========================================
+# 使用方法：docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# 特点：
+# - 热重载（挂载源代码）
+# - 开发工具完整
+# - 详细日志输出
+# - 禁用资源限制（便于调试）
+
+services:
+  # ========================================
+  # 前端服务 - 开发模式（热重载）
+  # ========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: baby-album-frontend:dev
+    container_name: baby-album-frontend-dev
+    ports:
+      - "${FRONTEND_DEV_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:3001/api}
+    networks:
+      - baby-album-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # ========================================
+  # 后端服务 - 开发模式（热重载）
+  # ========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    image: baby-album-backend:dev
+    container_name: baby-album-backend-dev
+    ports:
+      - "${BACKEND_DEV_PORT:-3001}:3001"
+      - "9229:9229"  # Node.js 调试端口
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+      - backend_prisma:/app/prisma
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL:-postgresql://babyuser:babypass@postgres:5432/babyalbum?schema=public}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret}
+      - JWT_EXPIRES_IN=7d
+      - REFRESH_TOKEN_EXPIRES_IN=30d
+      - S3_ENDPOINT=${S3_ENDPOINT:-http://minio:9000}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+      - S3_BUCKET=${S3_BUCKET:-baby-photos}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173,http://localhost:5174}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redispass}
+      - THROTTLE_TTL=60
+      - THROTTLE_LIMIT=1000  # 开发环境提高限制
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - baby-album-network
+    restart: unless-stopped
+
+  # ========================================
+  # pgAdmin - 数据库管理工具（仅开发环境）
+  # ========================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: baby-album-pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@babyalbum.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - baby-album-network
+    restart: unless-stopped
+    profiles:
+      - tools  # 使用 --profile tools 启动
+
+volumes:
+  frontend_node_modules:
+  backend_node_modules:
+  backend_prisma:
+  pgadmin-data:

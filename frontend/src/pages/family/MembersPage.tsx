@@ -2,20 +2,20 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { familyMembersApi, familyInvitationsApi } from '@/lib/family-api';
 import type { FamilyMember, FamilyInvitation, FamilyRole } from '@/types';
-import { Loading, ErrorAlert } from '@/components/ui';
+import { Loading, Modal, Input, Select, Button } from '@/components/ui';
 
 const ROLE_LABELS: Record<FamilyRole, string> = {
-  OWNER: '所有者',
+  OWNER: '创建者',
   ADMIN: '管理员',
-  MEMBER: '成员',
-  VIEWER: '访客',
+  MEMBER: '贡献者',
+  VIEWER: '查看者',
 };
 
 const ROLE_COLORS: Record<FamilyRole, string> = {
-  OWNER: 'bg-purple-100 text-purple-700',
-  ADMIN: 'bg-blue-100 text-blue-700',
-  MEMBER: 'bg-green-100 text-green-700',
-  VIEWER: 'bg-gray-100 text-gray-700',
+  OWNER: 'text-primary bg-primary-container/20',
+  ADMIN: 'text-primary bg-primary-container/20',
+  MEMBER: 'text-secondary bg-secondary-container/20',
+  VIEWER: 'text-tertiary bg-tertiary-container/20',
 };
 
 export default function MembersPage() {
@@ -37,7 +37,11 @@ export default function MembersPage() {
   }, []);
 
   const loadData = async () => {
-    if (!user?.familyId) return;
+    if (!user?.familyId) {
+      setIsLoading(false);
+      setError('未找到家庭信息。请创建或加入家庭。');
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -59,9 +63,8 @@ export default function MembersPage() {
     e.preventDefault();
     if (!user?.familyId) return;
 
-    // Email is optional, so only validate if provided
     if (inviteEmail.trim() && !inviteEmail.includes('@')) {
-      setError('请输入有效的邮箱地址');
+      setError('请输入有效的电子邮箱地址');
       return;
     }
 
@@ -71,13 +74,9 @@ export default function MembersPage() {
         role: inviteRole,
       });
 
-      // Generate invite link
       const link = `${window.location.origin}/invite?token=${invitation.token}`;
       setInviteLink(link);
-
-      // Reload invitations
       await loadData();
-
       setInviteEmail('');
       setInviteRole('MEMBER');
     } catch (err: any) {
@@ -124,203 +123,261 @@ export default function MembersPage() {
     return <Loading />;
   }
 
+  const activeInvitations = invitations?.filter((i) => !i.usedAt) || [];
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">家庭成员</h1>
-          <p className="text-gray-500 mt-1">管理您的家庭成员和角色</p>
+    <div className="max-w-7xl mx-auto animate-fade-in">
+      {/* Hero Header Section */}
+      <section className="mb-12 animate-slide-up">
+        <h2 className="text-5xl font-headline font-semibold text-on-surface mb-2">家庭空间</h2>
+        <p className="font-label text-on-surface-variant tracking-wide uppercase text-sm">管理您家庭的监护人圈子</p>
+      </section>
+
+      {error && (
+        <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 animate-slide-up">
+          {error}
         </div>
-        {canManage && (
-          <button onClick={() => setShowInviteModal(true)} className="btn-primary">
-            ➕ 邀请成员
-          </button>
-        )}
-      </div>
+      )}
 
-      {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
-
-      {/* Members List */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">成员 ({members.length})</h2>
-        <div className="space-y-3">
-          {members.map((member) => {
-            const isCurrentUser = member.userId === user?.id;
-            return (
-              <div
-                key={member.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div className="flex items-center space-x-4">
-                  {member.user.avatarUrl ? (
-                    <img
-                      src={member.user.avatarUrl}
-                      alt={member.user.displayName || member.user.email}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white text-lg font-bold">
-                      {(member.user.displayName || member.user.email)[0].toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {member.user.displayName || member.user.email}
-                      {isCurrentUser && <span className="ml-2 text-sm text-gray-500">(您)</span>}
-                    </p>
-                    <p className="text-sm text-gray-500">{member.user.email}</p>
-                    <p className="text-xs text-gray-400">
-                      加入时间: {new Date(member.joinedAt).toLocaleDateString()}
-                    </p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Member Management */}
+        <div className="col-span-1 lg:col-span-8 space-y-8 animate-slide-up" style={{ animationDelay: '100ms' }}>
+          
+          {/* Invite Action Card */}
+          {canManage && (
+            <div className="bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.04)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-outline-variant/10">
+              <div className="flex gap-6 items-center">
+                <div className="w-24 h-24 bg-surface-container-high rounded-lg flex items-center justify-center p-2 shrink-0">
+                  <div className="w-full h-full bg-white rounded-sm flex items-center justify-center border border-outline-variant/10">
+                    <span className="material-symbols-outlined text-4xl text-rose-900" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_2</span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${ROLE_COLORS[member.role]}`}>
-                    {ROLE_LABELS[member.role]}
-                  </span>
-                  {canManage && !isCurrentUser && member.role !== 'OWNER' && (
-                    <div className="flex items-center space-x-2">
-                      <select
-                        value={member.role}
-                        onChange={(e) => handleUpdateRole(member.id, e.target.value as FamilyRole)}
-                        className="text-sm border border-gray-300 rounded-lg px-2 py-1"
-                      >
-                        <option value="ADMIN">管理员</option>
-                        <option value="MEMBER">成员</option>
-                        <option value="VIEWER">访客</option>
-                      </select>
-                      <button
-                        onClick={() => handleRemoveMember(member.id, member.user.displayName || member.user.email)}
-                        className="text-red-600 hover:text-red-700 text-sm"
-                      >
-                        移除
-                      </button>
-                    </div>
-                  )}
+                <div>
+                  <h3 className="font-headline text-xl font-bold text-on-surface mb-1">邀请新成员</h3>
+                  <p className="text-on-surface-variant text-sm font-label max-w-xs">通过唯一的二维码或邀请链接共享安全访问权限。代码在 24 小时后过期。</p>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Pending Invitations */}
-      {invitations?.filter((i) => !i.usedAt).length > 0 && (
-        <div className="card">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            待处理邀请 ({invitations?.filter((i) => !i.usedAt).length})
-          </h2>
-          <div className="space-y-3">
-            {invitations
-              ?.filter((i) => !i.usedAt)
-              .map((invitation) => (
-                <div
-                  key={invitation.id}
-                  className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg"
+              <div className="flex gap-4 w-full md:w-auto">
+                <button 
+                  onClick={() => setShowInviteModal(true)}
+                  className="px-8 py-3 w-full md:w-auto bg-gradient-to-r from-primary to-primary-container text-white rounded-full font-label text-xs font-bold uppercase tracking-widest shadow-md hover:scale-105 transition-transform flex items-center justify-center gap-2"
                 >
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {invitation.email || '未指定邮箱'}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      角色: {ROLE_LABELS[invitation.role]} | 过期时间:{' '}
-                      {new Date(invitation.expiresAt).toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      创建者: {invitation.inviter.displayName || invitation.inviter.email}
-                    </p>
+                  <span className="material-symbols-outlined text-sm">person_add</span>
+                  邀请
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Member List */}
+          <div className="bg-surface-container-low rounded-xl p-8 border border-outline-variant/10">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="font-headline text-2xl font-semibold">活跃监护人</h3>
+              <span className="font-label text-xs uppercase font-bold text-rose-800 bg-rose-100 px-3 py-1 rounded-full">
+                {members.length} 位成员
+              </span>
+            </div>
+            
+            <div className="space-y-4">
+              {members.map((member) => {
+                const isCurrentUser = member.userId === user?.id;
+                return (
+                  <div key={member.id} className="bg-surface-container-lowest p-6 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:shadow-md transition-shadow border border-outline-variant/5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-surface-container flex items-center justify-center text-xl font-bold text-stone-400">
+                        {member.user.avatarUrl ? (
+                          <img src={member.user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          (member.user.displayName || member.user.email)[0].toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-label font-bold text-on-surface flex items-center gap-2">
+                          {member.user.displayName || member.user.email}
+                          {isCurrentUser && <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">您</span>}
+                        </h4>
+                        <p className="text-xs text-on-surface-variant truncate max-w-[200px] sm:max-w-xs">{member.user.email}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6 pl-18 sm:pl-0 mt-2 sm:mt-0">
+                      {canManage && !isCurrentUser && member.role !== 'OWNER' ? (
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleUpdateRole(member.id, e.target.value as FamilyRole)}
+                          className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border-none focus:ring-0 cursor-pointer ${ROLE_COLORS[member.role]}`}
+                        >
+                          <option value="ADMIN">管理员</option>
+                          <option value="MEMBER">贡献者</option>
+                          <option value="VIEWER">查看者</option>
+                        </select>
+                      ) : (
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${ROLE_COLORS[member.role]}`}>
+                          {ROLE_LABELS[member.role]}
+                        </span>
+                      )}
+                      
+                      {canManage && !isCurrentUser && member.role !== 'OWNER' && (
+                        <button
+                          onClick={() => handleRemoveMember(member.id, member.user.displayName || member.user.email)}
+                          className="text-stone-400 hover:text-red-500 transition-colors"
+                          title="移除成员"
+                        >
+                          <span className="material-symbols-outlined text-sm">person_remove</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {canManage && (
-                    <button
-                      onClick={() => handleRevokeInvitation(invitation.id)}
-                      className="text-red-600 hover:text-red-700 text-sm"
-                    >
-                      撤销
-                    </button>
-                  )}
+                );
+              })}
+
+              {/* Pending Invitations */}
+              {activeInvitations.map((invitation) => (
+                <div key={invitation.id} className="bg-surface-container-lowest p-6 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 group opacity-70 border border-outline-variant/5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-surface-container flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-outline">pending</span>
+                    </div>
+                    <div>
+                      <h4 className="font-label font-bold text-on-surface italic">等待接受...</h4>
+                      <p className="text-xs text-on-surface-variant truncate max-w-[200px] sm:max-w-xs">邀请已发送至 {invitation.email || 'link'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6 pl-18 sm:pl-0 mt-2 sm:mt-0">
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${ROLE_COLORS[invitation.role]}`}>
+                      {ROLE_LABELS[invitation.role]}
+                    </span>
+                    {canManage && (
+                      <button
+                        onClick={() => handleRevokeInvitation(invitation.id)}
+                        className="text-rose-900 font-label text-[10px] uppercase font-bold hover:underline"
+                      >
+                        撤销
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Right Column: Activity Feed & Summary */}
+        <div className="col-span-1 lg:col-span-4 space-y-8 animate-slide-up" style={{ animationDelay: '200ms' }}>
+          {/* Permissions Summary Card */}
+          <div className="bg-surface-container-highest rounded-xl p-8 border border-outline-variant/5">
+            <span className="material-symbols-outlined text-rose-900 mb-4 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+            <h4 className="font-headline text-lg font-bold mb-2 text-on-surface">安全协作</h4>
+            <p className="text-sm text-on-surface-variant font-body leading-relaxed">
+              只有管理员可以邀请新成员或导出完整档案。贡献者不能永久删除原始生物特征成长数据。
+            </p>
+          </div>
+
+          {/* Activity Feed Section */}
+          <div className="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
+            <h3 className="font-headline text-xl font-bold mb-8">最近动态</h3>
+            <div className="relative">
+              <div className="absolute left-3 top-0 bottom-0 w-px bg-rose-200/50"></div>
+              <div className="space-y-10 relative">
+                <div className="flex gap-6 items-start">
+                  <div className="z-10 w-6 h-6 rounded-full bg-white border-4 border-primary shadow-sm shrink-0"></div>
+                  <div>
+                    <p className="text-xs font-label uppercase font-bold tracking-widest text-rose-900 mb-1">今天</p>
+                    <p className="text-sm font-label text-on-surface">
+                      <span className="font-bold">您</span> 登录了相册管理。
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-6 items-start opacity-70">
+                  <div className="z-10 w-6 h-6 rounded-full bg-white border-4 border-secondary shadow-sm shrink-0"></div>
+                  <div>
+                    <p className="text-xs font-label uppercase font-bold tracking-widest text-secondary mb-1">系统</p>
+                    <p className="text-sm font-label text-on-surface">
+                      隐私协议验证通过。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Invite Modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">邀请新成员</h2>
-            {inviteLink ? (
-              <div>
-                <p className="text-gray-600 mb-4">邀请链接已创建，您可以复制发送给被邀请人：</p>
-                <div className="bg-gray-100 p-3 rounded-lg break-all text-sm mb-4">
-                  {inviteLink}
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(inviteLink);
-                    alert('链接已复制到剪贴板');
-                  }}
-                  className="w-full btn-primary"
-                >
-                  复制链接
-                </button>
-                <button
-                  onClick={() => {
-                    setShowInviteModal(false);
-                    setInviteLink(null);
-                  }}
-                  className="w-full mt-3 btn-secondary"
-                >
-                  关闭
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleCreateInvitation}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    邀箱地址 (可选)
-                  </label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    className="input"
-                    placeholder="invited@example.com"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">角色</label>
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as FamilyRole)}
-                    className="input"
-                  >
-                    <option value="MEMBER">成员</option>
-                    <option value="ADMIN">管理员</option>
-                    <option value="VIEWER">访客</option>
-                  </select>
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowInviteModal(false);
-                      setInviteEmail('');
-                    }}
-                    className="flex-1 btn-secondary"
-                  >
-                    取消
-                  </button>
-                  <button type="submit" className="flex-1 btn-primary">
-                    创建邀请
-                  </button>
-                </div>
-              </form>
-            )}
+      <Modal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        title="邀请新成员"
+        footer={
+          !inviteLink ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowInviteModal(false)}
+                className="px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100 transition-colors"
+              >
+                取消
+              </button>
+              <button onClick={handleCreateInvitation} className="btn-primary ml-2">
+                生成邀请
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {inviteLink ? (
+          <div className="space-y-6">
+            <p className="text-sm text-on-surface-variant font-label">
+              邀请链接已创建。任何人都可以通过此链接加入您的家庭空间。
+            </p>
+            <div className="bg-surface-container p-4 rounded-xl break-all text-xs font-bold text-on-surface">
+              {inviteLink}
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteLink);
+                  alert('已复制链接到剪贴板！');
+                }}
+                className="flex-1 btn-primary flex justify-center items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">content_copy</span> 复制链接
+              </button>
+              <button
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setInviteLink(null);
+                }}
+                className="flex-1 btn-secondary"
+              >
+                关闭
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <form onSubmit={handleCreateInvitation} className="space-y-6">
+            <Input
+              label="电子邮箱地址（可选）"
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="例如：member@family.com"
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">角色</label>
+              <Select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as FamilyRole)}
+                options={[
+                  { value: 'MEMBER', label: '贡献者' },
+                  { value: 'ADMIN', label: '管理员' },
+                  { value: 'VIEWER', label: '查看者' },
+                ]}
+              />
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

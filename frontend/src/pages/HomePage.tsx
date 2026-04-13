@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -5,13 +6,20 @@ export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
 
+  // 已登录用户直接跳转到 Dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   if (!isAuthenticated) {
     return (
       <div className="animate-fade-in">
         {/* Hero Section */}
         <div className="text-center py-16 px-4">
           <div className="mb-8">
-            <span className="text-7xl animate-bounce-soft inline-block">👶</span>
+            <span className="text-7xl animate-float inline-block">👶</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-gradient">
             宝宝成长相册
@@ -142,7 +150,7 @@ function FeatureCard({ icon, title, description, delay }: {
       className="card text-center animate-slide-up"
       style={{ animationDelay: delay }}
     >
-      <div className="text-5xl mb-4">{icon}</div>
+      <div className="text-5xl mb-4 animate-sparkle">{icon}</div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
       <p className="text-gray-600">{description}</p>
     </div>

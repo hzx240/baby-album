@@ -1,18 +1,108 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, memo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useChildStore } from '@/stores/child.store';
 import { photoApi } from '@/api/photo';
 import PhotoViewer from '@/components/PhotoViewer';
+import VirtualPhotoGrid from '@/components/VirtualPhotoGrid';
 import { Loading } from '@/components/ui';
 import { ErrorAlert } from '@/components/ui';
 import { EmptyState } from '@/components/ui';
 import type { Photo } from '@/types';
 
+// Web Worker for checksum calculation
+const createChecksumWorker = () => {
+  return new Worker(
+    new URL('../workers/checksum.worker.ts', import.meta.url),
+    { type: 'module' }
+  );
+};
+
+// Responsive column count
+const getColumnCount = () => {
+  if (typeof window === 'undefined') return 4;
+  const width = window.innerWidth;
+  if (width < 640) return 2; // sm
+  if (width < 768) return 3; // md
+  if (width < 1024) return 4; // lg
+  return 5; // xl
+};
+
+// Memoized photo card component to prevent unnecessary re-renders
+const PhotoCard = memo(({
+  photo,
+  photoUrl,
+  onClick,
+  onDelete,
+}: {
+  photo: Photo;
+  photoUrl: string | undefined;
+  onClick: () => void;
+  onDelete: (id: string) => void;
+}) => (
+  <div
+    className="group card p-3 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+    onClick={onClick}
+  >
+    <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-inner">
+      {photoUrl ? (
+        <img
+          src={photoUrl}
+          alt={photo.uploadedAt}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          loading="lazy"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <svg className="animate-spin h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center">
+        <div className="text-white/90 text-sm mb-2">🔍 点击查看</div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(photo.id);
+          }}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-medium shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-200 flex items-center gap-2"
+        >
+          <span>🗑️</span>
+          <span>删除</span>
+        </button>
+      </div>
+    </div>
+    <div className="mt-3 text-center">
+      <p className="text-xs text-gray-500 font-medium">
+        {new Date(photo.takenAt || photo.uploadedAt).toLocaleDateString('zh-CN', {
+          month: 'long',
+          day: 'numeric',
+        })}
+      </p>
+    </div>
+  </div>
+));
+
+PhotoCard.displayName = 'PhotoCard';
+
 export default function PhotosPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const childId = searchParams.get('childId');
-  const { children, fetchChildren } = useChildStore();
+
+  // Get store with safe defaults
+  const childStore = useChildStore();
+  const storeChildren = childStore?.children;
+
+  // Ensure children is always an array - multiple layers of safety
+  const children = React.useMemo(() => {
+    if (!storeChildren) return [];
+    if (!Array.isArray(storeChildren)) return [];
+    return storeChildren;
+  }, [storeChildren]);
+
+  const fetchChildren = childStore?.fetchChildren || (() => Promise.resolve());
 
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +114,12 @@ export default function PhotosPage() {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [viewerPhotos, setViewerPhotos] = useState<Array<{ id: string; url: string; uploadedAt: string; takenAt?: string | null }>>([]);
   const [uploadChildId, setUploadChildId] = useState<string | undefined>(childId || undefined);
+  const [columnCount, setColumnCount] = useState(getColumnCount());
+
+  // Safety wrapper to ensure photos is always an array
+  const safePhotos = React.useMemo(() => {
+    return Array.isArray(photos) ? photos : [];
+  }, [photos]);
 
   useEffect(() => {
     fetchChildren();
@@ -32,6 +128,12 @@ export default function PhotosPage() {
   useEffect(() => {
     loadPhotos();
   }, [childId]);
+
+  useEffect(() => {
+    const handleResize = () => setColumnCount(getColumnCount());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadPhotos = async () => {
     setLoading(true);
@@ -42,46 +144,22 @@ export default function PhotosPage() {
         page: 1,
         limit: 100,
       });
-      setPhotos(response.data);
+      const photosData = Array.isArray(response.data) ? response.data : [];
+      setPhotos(photosData);
 
-      // Load photo URLs - thumbnails for grid, original for viewer
-      const urls = new Map<string, string>();
-      const viewerData = await Promise.all(
-        response.data.map(async (photo) => {
-          let originalUrl = '';
-          try {
-            // Load thumbnail for grid
-            if (photo.thumbKey) {
-              const thumbResponse = await photoApi.getPhotoUrl(photo.id, 'thumb');
-              urls.set(photo.id, thumbResponse.url);
-            } else if (photo.resizedKey) {
-              try {
-                const resizedResponse = await photoApi.getPhotoUrl(photo.id, 'resized');
-                urls.set(photo.id, resizedResponse.url);
-              } catch (e) {
-                if (photo.originalKey) {
-                  const origResponse = await photoApi.getPhotoUrl(photo.id, 'original');
-                  urls.set(photo.id, origResponse.url);
-                }
-              }
-            }
-            // Load original for viewer
-            if (photo.originalKey) {
-              const originalResponse = await photoApi.getPhotoUrl(photo.id, 'original');
-              originalUrl = originalResponse.url;
-            }
-          } catch (e) {
-            console.error(`Failed to load URL for photo ${photo.id}:`, e);
-          }
-          return {
-            id: photo.id,
-            url: originalUrl,
-            uploadedAt: photo.uploadedAt,
-            takenAt: photo.takenAt,
-          };
-        })
-      );
-      setPhotoUrls(urls);
+      // Batch load photo URLs - optimized to reduce API calls
+      const photoIds = photosData.map(p => p.id);
+      const thumbUrls = await photoApi.getPhotoUrlsBatch(photoIds, 'thumb');
+      const originalUrls = await photoApi.getPhotoUrlsBatch(photoIds, 'original');
+
+      const viewerData = photosData.map(photo => ({
+        id: photo.id,
+        url: originalUrls.get(photo.id) || '',
+        uploadedAt: photo.uploadedAt,
+        takenAt: photo.takenAt,
+      }));
+
+      setPhotoUrls(thumbUrls);
       setViewerPhotos(viewerData);
     } catch (err: any) {
       setError(err.response?.data?.message || '加载照片失败');
@@ -97,12 +175,26 @@ export default function PhotosPage() {
     }
   };
 
-  const calculateChecksum = async (file: File): Promise<string> => {
-    const buffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
+  const calculateChecksum = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const worker = createChecksumWorker();
+
+      worker.onmessage = (e) => {
+        if (e.data.error) {
+          reject(new Error(e.data.error));
+        } else {
+          resolve(e.data.checksum);
+        }
+        worker.terminate();
+      };
+
+      worker.onerror = (error) => {
+        reject(error);
+        worker.terminate();
+      };
+
+      worker.postMessage(file);
+    });
   };
 
   const handleUpload = async () => {
@@ -136,6 +228,7 @@ export default function PhotosPage() {
       await photoApi.completeUpload({
         key: uploadResponse.key,
         checksum,
+        contentType: selectedFile.type,
         childId: uploadChildId,
       });
 
@@ -160,7 +253,7 @@ export default function PhotosPage() {
 
     try {
       await photoApi.deletePhoto(photoId);
-      setPhotos(photos.filter((p) => p.id !== photoId));
+      setPhotos(safePhotos.filter((p) => p.id !== photoId));
       setPhotoUrls((prev) => {
         const newUrls = new Map(prev);
         newUrls.delete(photoId);
@@ -178,14 +271,18 @@ export default function PhotosPage() {
   };
 
   const handleViewerDelete = async (photoId: string) => {
-    await photoApi.deletePhoto(photoId);
-    setPhotos(photos.filter((p) => p.id !== photoId));
-    setPhotoUrls((prev) => {
-      const newUrls = new Map(prev);
-      newUrls.delete(photoId);
-      return newUrls;
-    });
-    setViewerPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    try {
+      await photoApi.deletePhoto(photoId);
+      setPhotos(prev => prev.filter((p) => p.id !== photoId));
+      setPhotoUrls((prev) => {
+        const newUrls = new Map(prev);
+        newUrls.delete(photoId);
+        return newUrls;
+      });
+      setViewerPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    } catch (err: any) {
+      setError(err.response?.data?.message || '删除失败');
+    }
   };
 
   const handleViewerDownload = async (photoId: string, url: string) => {
@@ -204,10 +301,13 @@ export default function PhotosPage() {
   };
 
   // Group photos by year-month
-  const groupPhotosByDate = (photos: Photo[]) => {
+  const groupPhotosByDate = (photos: Photo[] | undefined) => {
     const grouped: Record<string, Photo[]> = {};
 
-    photos.forEach((photo) => {
+    // Ensure photos is an array
+    const photosArray = Array.isArray(photos) ? photos : [];
+
+    photosArray.forEach((photo) => {
       const date = photo.takenAt ? new Date(photo.takenAt) : new Date(photo.uploadedAt);
       const year = date.getFullYear();
       const month = date.getMonth();
@@ -228,6 +328,7 @@ export default function PhotosPage() {
 
     return sortedKeys.map((key) => {
       const [year, month] = key.split('-').map(Number);
+      const groupPhotos = grouped[key] || [];
       return {
         key,
         year,
@@ -236,7 +337,7 @@ export default function PhotosPage() {
           year: 'numeric',
           month: 'long',
         }),
-        photos: grouped[key].sort((a, b) => {
+        photos: groupPhotos.sort((a, b) => {
           const dateA = new Date(a.takenAt || a.uploadedAt);
           const dateB = new Date(b.takenAt || b.uploadedAt);
           return dateB.getTime() - dateA.getTime();
@@ -247,7 +348,15 @@ export default function PhotosPage() {
 
   const selectedChild = children.find((c) => c.id === childId);
 
+  // Memoize grouped photos to prevent unnecessary re-grouping
+  const groupedPhotos = useMemo(() => groupPhotosByDate(safePhotos), [safePhotos]);
+
   if (loading) {
+    return <Loading />;
+  }
+
+  // Safety check - ensure children is defined before rendering
+  if (!children || !Array.isArray(children)) {
     return <Loading />;
   }
 
@@ -261,7 +370,7 @@ export default function PhotosPage() {
               {selectedChild ? `${selectedChild.name}的照片` : '所有照片'}
             </h1>
             <p className="text-gray-500 mt-1">
-              {photos.length > 0 ? `共 ${photos.length} 张照片` : '还没有照片'}
+              {safePhotos.length > 0 ? `共 ${safePhotos.length} 张照片` : '还没有照片'}
             </p>
           </div>
 
@@ -369,75 +478,32 @@ export default function PhotosPage() {
 
       {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
 
-      {/* Photos Grid */}
-      {photos.length === 0 ? (
+      {/* Photos Grid with Virtual Scrolling */}
+      {safePhotos.length === 0 ? (
         <EmptyState
           icon="📸"
           title="还没有照片"
           description={children.length === 0 ? '请先添加宝贝信息，然后上传照片' : '点击上方按钮上传第一张照片'}
         />
       ) : (
-        <div className="space-y-12">
-          {groupPhotosByDate(photos).map((group) => (
-            <div key={group.key} className="animate-slide-up">
-              <div className="mb-6 sticky top-0 bg-white/90 backdrop-blur-sm py-3 z-10 rounded-xl">
-                <h3 className="text-2xl font-bold text-gradient">{group.monthName}</h3>
-                <p className="text-sm text-gray-500">{group.photos.length} 张照片</p>
-              </div>
+        <div className="animate-slide-up">
+          <div className="mb-6 bg-white/90 backdrop-blur-sm py-3 rounded-xl">
+            <h1 className="text-3xl font-bold text-gray-900">
+              {selectedChild ? `${selectedChild.name}的照片` : '所有照片'}
+            </h1>
+            <p className="text-gray-500 mt-1">
+              {safePhotos.length > 0 ? `共 ${safePhotos.length} 张照片` : '还没有照片'}
+            </p>
+          </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {group.photos.map((photo) => {
-                  const globalIndex = photos.findIndex((p) => p.id === photo.id);
-                  return (
-                    <div
-                      key={photo.id}
-                      onClick={() => handleOpenViewer(globalIndex)}
-                      className="group card p-3 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-                    >
-                      <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-inner">
-                        {photoUrls.get(photo.id) ? (
-                          <img
-                            src={photoUrls.get(photo.id)}
-                            alt={photo.uploadedAt}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <svg className="animate-spin h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center">
-                          <div className="text-white/90 text-sm mb-2">🔍 点击查看</div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(photo.id);
-                            }}
-                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-medium shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-200 flex items-center gap-2"
-                          >
-                            <span>🗑️</span>
-                            <span>删除</span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-3 text-center">
-                        <p className="text-xs text-gray-500 font-medium">
-                          {new Date(photo.takenAt || photo.uploadedAt).toLocaleDateString('zh-CN', {
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          <VirtualPhotoGrid
+            photos={safePhotos}
+            photoUrls={photoUrls}
+            columnCount={columnCount}
+            rowHeight={350} // card height + spacing
+            onPhotoClick={handleOpenViewer}
+            onPhotoDelete={handleDelete}
+          />
         </div>
       )}
 

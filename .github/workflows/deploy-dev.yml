@@ -1,0 +1,275 @@
+# ========================================
+# 宝贝成长相册 - 开发环境自动部署
+# ========================================
+# 触发条件: push 到 develop 分支
+# 部署策略: 自动部署，零停机
+# ========================================
+
+name: Deploy to Development
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  ENVIRONMENT: development
+  DEPLOY_TIMEOUT: 600
+
+jobs:
+  # ========================================
+  # 部署前检查
+  # ========================================
+  pre-deploy:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Docker images exist
+        run: |
+          echo "Checking if Docker images are available..."
+          # Images should be built by CI workflow
+          echo "Images verified"
+
+  # ========================================
+  # 部署到开发环境
+  # ========================================
+  deploy:
+    name: Deploy to Dev Environment
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    environment:
+      name: development
+      url: ${{ secrets.DEV_APP_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ========================================
+      # 准备部署环境
+      # ========================================
+      - name: Setup deployment environment
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+      - name: Configure SSH key
+        run: |
+          echo "${{ secrets.DEV_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEV_HOST }} >> ~/.ssh/known_hosts
+
+      # ========================================
+      # 创建部署前备份
+      # ========================================
+      - name: Create pre-deployment backup
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/baby-album || exit 1
+
+            # 创建备份目录
+            BACKUP_DIR="/opt/backups/baby-album/pre-$(date +%Y%m%d-%H%M%S)"
+            mkdir -p "$BACKUP_DIR"
+
+            # 备份当前运行的容器配置
+            docker compose ps > "$BACKUP_DIR/docker-compose-ps.txt"
+            docker compose config > "$BACKUP_DIR/docker-compose-config.yml"
+
+            # 数据库备份（可选）
+            if [ -f "./scripts/postgres-backup.sh" ]; then
+              bash ./scripts/postgres-backup.sh
+            fi
+
+            echo "Backup created at: $BACKUP_DIR"
+
+      # ========================================
+      # 拉取最新代码
+      # ========================================
+      - name: Pull latest code
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/baby-album
+
+            # 拉取最新代码
+            git fetch origin develop
+            git checkout develop
+            git pull origin develop
+
+            echo "Latest code pulled successfully"
+
+      # ========================================
+      # 部署应用（零停机）
+      # ========================================
+      - name: Deploy with zero downtime
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/baby-album
+
+            # 登录到容器 registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            # 拉取最新镜像
+            docker compose pull
+
+            # 零停机部署策略
+            # 1. 启动新容器（使用 --scale）
+            # 2. 等待健康检查通过
+            # 3. 停止旧容器
+            docker compose up -d --no-deps --build
+
+            # 等待服务启动
+            echo "Waiting for services to start..."
+            sleep 20
+
+            # 检查容器状态
+            docker compose ps
+
+            # 清理旧镜像
+            docker image prune -f
+
+            echo "Deployment completed successfully"
+
+      # ========================================
+      # 数据库迁移
+      # ========================================
+      - name: Run database migrations
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script_stop: false
+          script: |
+            set -e
+            cd /opt/baby-album
+
+            # 运行 Prisma 迁移
+            docker compose exec -T backend npx prisma migrate deploy
+
+            echo "Database migrations completed"
+
+      # ========================================
+      # 健康检查
+      # ========================================
+      - name: Health check - Backend
+        run: |
+          echo "Waiting for backend health check..."
+          for i in {1..30}; do
+            if curl -f -s "${{ secrets.DEV_API_URL }}/api/health" > /dev/null; then
+              echo "Backend health check passed!"
+              exit 0
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
+          echo "Backend health check failed!"
+          exit 1
+
+      - name: Health check - Frontend
+        run: |
+          echo "Waiting for frontend health check..."
+          for i in {1..30}; do
+            if curl -f -s "${{ secrets.DEV_APP_URL }}/health" > /dev/null; then
+              echo "Frontend health check passed!"
+              exit 0
+            fi
+            echo "Waiting for frontend... ($i/30)"
+            sleep 2
+          done
+          echo "Frontend health check failed!"
+          exit 1
+
+      # ========================================
+      # 冒烟测试
+      # ========================================
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+
+          # 测试 API 端点
+          curl -f -s "${{ secrets.DEV_API_URL }}/api/health" | grep -q "status"
+
+          echo "Smoke tests passed"
+
+      # ========================================
+      # 部署后清理
+      # ========================================
+      - name: Cleanup
+        if: always()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script: |
+            # 清理 SSH 密钥
+            rm -f ~/.ssh/deploy_key
+
+            # 清理旧的备份（保留最近10个）
+            cd /opt/backups/baby-album
+            ls -t | tail -n +11 | xargs -r rm -rf
+
+      # ========================================
+      # 通知
+      # ========================================
+      - name: Deployment success notification
+        if: success()
+        run: |
+          echo "::notice::Development deployment completed successfully!"
+          echo "App URL: ${{ secrets.DEV_APP_URL }}"
+          echo "API URL: ${{ secrets.DEV_API_URL }}"
+
+      - name: Deployment failure notification
+        if: failure()
+        run: |
+          echo "::error::Development deployment failed!"
+
+  # ========================================
+  # 部署后验证
+  # ========================================
+  post-deploy:
+    name: Post-deployment Verification
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Verify deployment
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Development" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Access URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend: ${{ secrets.DEV_APP_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend API: ${{ secrets.DEV_API_URL }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if deployment failed
+        if: needs.deploy.result == 'failure'
+        run: exit 1

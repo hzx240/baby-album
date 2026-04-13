@@ -1,0 +1,491 @@
+{
+  "categories": {
+    "GROSS_MOTOR": {
+      "name": "大运动",
+      "icon": "🏃",
+      "description": "控制身体大肌肉群的动作，如抬头、翻身、坐、爬、站、走、跑、跳等"
+    },
+    "FINE_MOTOR": {
+      "name": "精细动作",
+      "icon": "✋",
+      "description": "控制手部小肌肉群的动作，如抓握、捏取、画画、使用工具等"
+    },
+    "LANGUAGE": {
+      "name": "语言",
+      "icon": "🗣️",
+      "description": "语言理解和表达能力的发展"
+    },
+    "SOCIAL": {
+      "name": "社交情感",
+      "icon": "👶",
+      "description": "社交互动和情感表达能力的发展"
+    },
+    "COGNITIVE": {
+      "name": "认知",
+      "icon": "🧠",
+      "description": "思维、记忆、解决问题等认知能力的发展"
+    }
+  },
+  "milestones": [
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 2,
+      "milestones": [
+        { "name": "抬头片刻", "description": "俯卧时能短暂抬头", "typicalMonth": 1, "indicator": "T" },
+        { "name": "四肢活动", "description": "四肢能活动，俯卧时能踢腿", "typicalMonth": 1, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 2,
+      "ageMonthsMax": 4,
+      "milestones": [
+        { "name": "抬头稳定", "description": "俯卧时能稳定抬头45-90度", "typicalMonth": 3, "indicator": "T" },
+        { "name": "侧翻", "description": "能从仰卧翻到侧卧", "typicalMonth": 4, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 4,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "翻身自如", "description": "能从仰卧翻到俯卧或俯卧翻到仰卧", "typicalMonth": 5, "indicator": "T" },
+        { "name": "坐立支撑", "description": "有支撑时能坐", "typicalMonth": 5, "indicator": "T" },
+        { "name": "拉坐", "description": "拉着双手能坐起，头不后仰", "typicalMonth": 4, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "独坐", "description": "无需支撑能独立坐稳", "typicalMonth": 7, "indicator": "T" },
+        { "name": "爬行", "description": "开始用手膝爬行或匍匐前进", "typicalMonth": 8, "indicator": "T" },
+        { "name": "扶站", "description": "扶着家具能站立", "typicalMonth": 9, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "扶走", "description": "扶着家具能走几步", "typicalMonth": 10, "indicator": "T" },
+        { "name": "独站", "description": "能独立站立片刻", "typicalMonth": 11, "indicator": "T" },
+        { "name": "牵手走", "description": "能牵着家长的手走", "typicalMonth": 11, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "独立行走", "description": "能独立走几步到几步以上", "typicalMonth": 12, "indicator": "T" },
+        { "name": "蹲下捡物", "description": "能蹲下捡东西再站起", "typicalMonth": 14, "indicator": "T" },
+        { "name": "走得很稳", "description": "走路较稳，很少摔倒", "typicalMonth": 15, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "跑步", "description": "能小跑，姿势较稳", "typicalMonth": 18, "indicator": "T" },
+        { "name": "踢球", "description": "能踢球前进", "typicalMonth": 20, "indicator": "T" },
+        { "name": "上楼梯", "description": "能扶栏上楼梯", "typicalMonth": 21, "indicator": "T" },
+        { "name": "跳", "description": "能双脚离地跳起", "typicalMonth": 23, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "双脚跳远", "description": "能双脚并拢跳远", "typicalMonth": 26, "indicator": "T" },
+        { "name": "单脚站", "description": "能单脚站立1-2秒", "typicalMonth": 28, "indicator": "T" },
+        { "name": "骑三轮车", "description": "能骑三轮车", "typicalMonth": 30, "indicator": "T" },
+        { "name": "上下楼梯交替", "description": "能交替脚步上下楼梯", "typicalMonth": 32, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 36,
+      "ageMonthsMax": 48,
+      "milestones": [
+        { "name": "单脚跳", "description": "能单脚连续跳", "typicalMonth": 38, "indicator": "T" },
+        { "name": "抓球", "description": "能接住抛来的球", "typicalMonth": 40, "indicator": "T" },
+        { "name": "跳绳基础", "description": "能跳绳1-2下", "typicalMonth": 42, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "GROSS_MOTOR",
+      "ageMonthsMin": 48,
+      "ageMonthsMax": 60,
+      "milestones": [
+        { "name": "跑跳自如", "description": "能自如地跑、跳、攀爬", "typicalMonth": 50, "indicator": "T" },
+        { "name": "骑自行车", "description": "能骑两轮自行车（辅助轮）", "typicalMonth": 54, "indicator": "T" },
+        { "name": "跳跃障碍", "description": "能跳跃小障碍物", "typicalMonth": 56, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 3,
+      "milestones": [
+        { "name": "握持反射", "description": "手指触碰手掌会紧握", "typicalMonth": 1, "indicator": "T" },
+        { "name": "看手", "description": "开始注视自己的手", "typicalMonth": 2, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 3,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "抓握", "description": "能抓住悬挂在面前的玩具", "typicalMonth": 4, "indicator": "T" },
+        { "name": "手眼协调", "description": "眼睛能追随移动的手", "typicalMonth": 4, "indicator": "T" },
+        { "name": "两手抓", "description": "能两手各抓一个玩具", "typicalMonth": 5, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "换手", "description": "能把玩具从一只手换到另一只手", "typicalMonth": 7, "indicator": "T" },
+        { "name": "敲打", "description": "能敲打两个玩具发出声音", "typicalMonth": 8, "indicator": "T" },
+        { "name": "拇指对掌", "description": "能用拇指和其他手指对捏", "typicalMonth": 8, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "捏取", "description": "能用拇指和食指捏起小东西", "typicalMonth": 9, "indicator": "T" },
+        { "name": "放东西", "description": "能把东西放进容器或取出", "typicalMonth": 10, "indicator": "T" },
+        { "name": "涂鸦", "description": "能握住蜡笔在纸上涂鸦", "typicalMonth": 12, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "叠积木", "description": "能叠2-3块积木", "typicalMonth": 14, "indicator": "T" },
+        { "name": "翻书页", "description": "能一页一页翻书", "typicalMonth": 15, "indicator": "T" },
+        { "name": "用勺子", "description": "能尝试用勺子吃饭", "typicalMonth": 16, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "叠积木4块", "description": "能叠4块积木", "typicalMonth": 20, "indicator": "T" },
+        { "name": "简单涂鸦", "description": "能画圆圈", "typicalMonth": 21, "indicator": "T" },
+        { "name": "拧瓶盖", "description": "能拧开瓶盖", "typicalMonth": 22, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "串珠子", "description": "能串大珠子", "typicalMonth": 27, "indicator": "T" },
+        { "name": "模仿画线", "description": "能模仿画垂直线", "typicalMonth": 28, "indicator": "T" },
+        { "name": "用剪刀", "description": "能尝试用剪刀剪纸", "typicalMonth": 30, "indicator": "T" },
+        { "name": "叠积木6块", "description": "能叠6块积木", "typicalMonth": 30, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 36,
+      "ageMonthsMax": 48,
+      "milestones": [
+        { "name": "画简单图形", "description": "能画十字和简单图形", "typicalMonth": 36, "indicator": "T" },
+        { "name": "折纸", "description": "能简单折纸", "typicalMonth": 38, "indicator": "T" },
+        { "name": "用筷子", "description": "能初步使用筷子", "typicalMonth": 40, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "FINE_MOTOR",
+      "ageMonthsMin": 48,
+      "ageMonthsMax": 60,
+      "milestones": [
+        { "name": "画人像", "description": "能画简单的人像（有头和四肢）", "typicalMonth": 48, "indicator": "T" },
+        { "name": "写字母", "description": "能写简单的字母或数字", "typicalMonth": 52, "indicator": "T" },
+        { "name": "精细手工", "description": "能做较复杂的手工", "typicalMonth": 54, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 3,
+      "milestones": [
+        { "name": "哭声分化", "description": "不同需求有不同哭声", "typicalMonth": 1, "indicator": "T" },
+        { "name": "咕咕声", "description": "发出咕咕声", "typicalMonth": 2, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 3,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "咿呀学语", "description": "发出元音和辅音组合（ba-ba、da-da）", "typicalMonth": 4, "indicator": "T" },
+        { "name": "笑出声", "description": "能笑出声音", "typicalMonth": 4, "indicator": "T" },
+        { "name": "回应声音", "description": "听到声音会转头寻找", "typicalMonth": 5, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "发音节", "description": "持续发出ba-ba、ma-ma等音节", "typicalMonth": 7, "indicator": "T" },
+        { "name": "模仿声音", "description": "尝试模仿大人的声音", "typicalMonth": 8, "indicator": "T" },
+        { "name": "理解「不」", "description": "能理解「不」的含义", "typicalMonth": 9, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "叫爸妈", "description": "有意识地叫爸爸妈妈", "typicalMonth": 10, "indicator": "T" },
+        { "name": "理解简单指令", "description": "能理解简单的指令（如「给我」）", "typicalMonth": 11, "indicator": "T" },
+        { "name": "手势表达", "description": "能用摇头表示「不要」", "typicalMonth": 10, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "说单词", "description": "能说3-5个单词", "typicalMonth": 13, "indicator": "T" },
+        { "name": "指认物品", "description": "能用手指指出熟悉的物品", "typicalMonth": 14, "indicator": "T" },
+        { "name": "模仿词", "description": "能模仿说新词", "typicalMonth": 15, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "词汇爆发", "description": "能说50个以上单词", "typicalMonth": 20, "indicator": "T" },
+        { "name": "两词句", "description": "能说两个词的短句（如「妈妈抱」）", "typicalMonth": 21, "indicator": "T" },
+        { "name": "命名物品", "description": "能说出图片中物品的名字", "typicalMonth": 21, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "简单句子", "description": "能说3-4个词的句子", "typicalMonth": 26, "indicator": "T" },
+        { "name": "提问", "description": "开始问「这是什么」「为什么」", "typicalMonth": 28, "indicator": "T" },
+        { "name": "唱歌", "description": "能唱简单的儿歌", "typicalMonth": 30, "indicator": "T" },
+        { "name": "人称使用", "description": "正确使用「我」和「你」", "typicalMonth": 32, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 36,
+      "ageMonthsMax": 48,
+      "milestones": [
+        { "name": "完整对话", "description": "能进行完整的对话", "typicalMonth": 36, "indicator": "T" },
+        { "name": "故事讲述", "description": "能简单讲述熟悉的故事", "typicalMonth": 40, "indicator": "T" },
+        { "name": "使用过去式", "description": "开始使用过去时态", "typicalMonth": 42, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "LANGUAGE",
+      "ageMonthsMin": 48,
+      "ageMonthsMax": 60,
+      "milestones": [
+        { "name": "丰富表达", "description": "能用丰富的词汇表达", "typicalMonth": 48, "indicator": "T" },
+        { "name": "讲完整故事", "description": "能讲完整的故事", "typicalMonth": 52, "indicator": "T" },
+        { "name": "读写准备", "description": "对认字和写字产生兴趣", "typicalMonth": 54, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 3,
+      "milestones": [
+        { "name": "注视人脸", "description": "能注视人的面孔", "typicalMonth": 1, "indicator": "T" },
+        { "name": "社交性微笑", "description": "对人微笑", "typicalMonth": 2, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 3,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "认识亲人", "description": "能认出主要照顾者", "typicalMonth": 4, "indicator": "T" },
+        { "name": "喜欢互动", "description": "喜欢与人互动游戏", "typicalMonth": 5, "indicator": "T" },
+        { "name": "照镜子", "description": "对镜子里的自己有反应", "typicalMonth": 5, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "认生", "description": "对陌生人表现害羞或焦虑", "typicalMonth": 7, "indicator": "T" },
+        { "name": "分离焦虑", "description": "与主要照顾者分离时哭闹", "typicalMonth": 8, "indicator": "T" },
+        { "name": "要抱抱", "description": "会主动要家长抱", "typicalMonth": 8, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "挥手再见", "description": "能挥手表示再见", "typicalMonth": 10, "indicator": "T" },
+        { "name": "模仿动作", "description": "模仿简单的动作和表情", "typicalMonth": 11, "indicator": "T" },
+        { "name": "表达情感", "description": "能用表情表达情绪", "typicalMonth": 11, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "平行游戏", "description": "在其他孩子旁边玩（平行游戏）", "typicalMonth": 15, "indicator": "T" },
+        { "name": "喜欢被夸", "description": "喜欢被表扬和鼓励", "typicalMonth": 15, "indicator": "T" },
+        { "name": "指认家人", "description": "能指出家庭成员", "typicalMonth": 16, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "模仿行为", "description": "模仿大人的日常行为", "typicalMonth": 20, "indicator": "T" },
+        { "name": "帮忙做事", "description": "喜欢帮忙做简单的事", "typicalMonth": 22, "indicator": "T" },
+        { "name": "分享意识", "description": "开始有分享的意识", "typicalMonth": 23, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "合作游戏", "description": "开始与其他孩子一起玩", "typicalMonth": 28, "indicator": "T" },
+        { "name": "轮流", "description": "理解轮流的概念", "typicalMonth": 30, "indicator": "T" },
+        { "name": "识别情绪", "description": "能识别他人的情绪", "typicalMonth": 32, "indicator": "T" },
+        { "name": "假想游戏", "description": "能进行假想游戏", "typicalMonth": 33, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 36,
+      "ageMonthsMax": 48,
+      "milestones": [
+        { "name": "交朋友", "description": "能与其他孩子交朋友", "typicalMonth": 36, "indicator": "T" },
+        { "name": "理解规则", "description": "能理解简单的游戏规则", "typicalMonth": 40, "indicator": "T" },
+        { "name": "表达感受", "description": "能用语言表达感受", "typicalMonth": 42, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "SOCIAL",
+      "ageMonthsMin": 48,
+      "ageMonthsMax": 60,
+      "milestones": [
+        { "name": "同理心", "description": "表现出对他人感受的理解", "typicalMonth": 48, "indicator": "T" },
+        { "name": "团队合作", "description": "能在团队中合作", "typicalMonth": 52, "indicator": "T" },
+        { "name": "遵守规则", "description": "能较好地遵守规则", "typicalMonth": 54, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 0,
+      "ageMonthsMax": 3,
+      "milestones": [
+        { "name": "追视", "description": "眼睛能追随移动的物体", "typicalMonth": 1, "indicator": "T" },
+        { "name": "认识妈妈", "description": "能认出妈妈的声音和气味", "typicalMonth": 2, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 3,
+      "ageMonthsMax": 6,
+      "milestones": [
+        { "name": "伸手够物", "description": "看到物品会伸手去够", "typicalMonth": 4, "indicator": "T" },
+        { "name": "探索物品", "description": "用嘴和手探索物品", "typicalMonth": 5, "indicator": "T" },
+        { "name": "寻找声源", "description": "能寻找声音的来源", "typicalMonth": 5, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 6,
+      "ageMonthsMax": 9,
+      "milestones": [
+        { "name": "物体永存", "description": "理解物体被遮挡后仍然存在", "typicalMonth": 8, "indicator": "T" },
+        { "name": "因果关系", "description": "理解简单的因果关系（如按按钮出声音）", "typicalMonth": 8, "indicator": "T" },
+        { "name": "藏猫猫", "description": "喜欢藏猫猫游戏", "typicalMonth": 9, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 9,
+      "ageMonthsMax": 12,
+      "milestones": [
+        { "name": "寻找隐藏物", "description": "能找到被藏起来的玩具", "typicalMonth": 10, "indicator": "T" },
+        { "name": "使用工具", "description": "能用工具够取物品", "typicalMonth": 11, "indicator": "T" },
+        { "name": "指认身体部位", "description": "能指出自己的身体部位", "typicalMonth": 11, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 12,
+      "ageMonthsMax": 18,
+      "milestones": [
+        { "name": "分类", "description": "能按形状或颜色分类物品", "typicalMonth": 14, "indicator": "T" },
+        { "name": "模仿游戏", "description": "模仿做家务等日常活动", "typicalMonth": 15, "indicator": "T" },
+        { "name": "认识五官", "description": "能指出娃娃的五官", "typicalMonth": 16, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 18,
+      "ageMonthsMax": 24,
+      "milestones": [
+        { "name": "解决问题", "description": "能解决简单的问题", "typicalMonth": 18, "indicator": "T" },
+        { "name": "认识颜色", "description": "能认识基本颜色（红、黄、蓝）", "typicalMonth": 20, "indicator": "T" },
+        { "name": "数数", "description": "能数1-3", "typicalMonth": 21, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 24,
+      "ageMonthsMax": 36,
+      "milestones": [
+        { "name": "配对", "description": "能进行简单的配对游戏", "typicalMonth": 26, "indicator": "T" },
+        { "name": "数数到10", "description": "能数到10", "typicalMonth": 30, "indicator": "T" },
+        { "name": "理解相反", "description": "理解大小、高矮等相反概念", "typicalMonth": 32, "indicator": "T" },
+        { "name": "命名颜色", "description": "能说出物体是什么颜色", "typicalMonth": 33, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 36,
+      "ageMonthsMax": 48,
+      "milestones": [
+        { "name": "简单拼图", "description": "能完成3-4块的拼图", "typicalMonth": 36, "indicator": "T" },
+        { "name": "理解因果", "description": "能理解简单的自然因果", "typicalMonth": 40, "indicator": "T" },
+        { "name": "记忆故事", "description": "能记住故事的主要情节", "typicalMonth": 42, "indicator": "T" }
+      ]
+    },
+    {
+      "category": "COGNITIVE",
+      "ageMonthsMin": 48,
+      "ageMonthsMax": 60,
+      "milestones": [
+        { "name": "认字", "description": "能认读简单的汉字或字母", "typicalMonth": 48, "indicator": "T" },
+        { "name": "简单计算", "description": "能进行简单的加减法", "typicalMonth": 52, "indicator": "T" },
+        { "name": "时间概念", "description": "开始理解先后顺序", "typicalMonth": 54, "indicator": "T" }
+      ]
+    }
+  ]
+}

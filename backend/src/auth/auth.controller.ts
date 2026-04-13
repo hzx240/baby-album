@@ -1,16 +1,17 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Public } from './guards/jwt-auth-public.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('v1/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 100, ttl: 60000 } })
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -31,10 +32,15 @@ export class AuthController {
     return this.authService.refreshTokens(refreshToken);
   }
 
-  @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Body('userId') userId: string) {
-    return this.authService.logout(userId);
+  async logout(
+    @CurrentUser('userId') userId: string,
+    @Req() request: any,
+  ) {
+    // Extract token from Authorization header for blacklisting
+    const authHeader = request.headers?.authorization;
+    const token = authHeader?.replace('Bearer ', '');
+    return this.authService.logout(userId, token);
   }
 }
