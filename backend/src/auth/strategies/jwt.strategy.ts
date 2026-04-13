@@ -28,10 +28,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token has been revoked');
     }
 
-    const cacheKey = `user:${payload.sub}`;
-
     // Try to get from cache first
-    let user = await this.cache.getUser(cacheKey);
+    let user = await this.cache.getUser(payload.sub);
 
     if (!user) {
       // Cache miss - query database

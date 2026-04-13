@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 import { SkipThrottle } from '@nestjs/throttler';
@@ -24,6 +24,22 @@ export class HealthController {
     } catch (error) {
       dbStatus = 'error';
       dbError = error instanceof Error ? error.message : 'Unknown error';
+      throw new ServiceUnavailableException({
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        services: {
+          database: {
+            status: dbStatus,
+            error: dbError,
+          },
+          api: {
+            status: 'running',
+            version: process.env.npm_package_version || '0.0.1',
+          },
+        },
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+      });
     }
 
     return {
