@@ -24,7 +24,13 @@ Baby Growth Photo Album (宝贝成长相册) — a full-stack TypeScript app wit
 - **Backend lint**: `cd backend && npm run lint`
 - **Backend test**: `cd backend && npm run test`
 - **Frontend lint**: `cd frontend && npm run lint`
+- **Frontend test**: `cd frontend && npm run test` (vitest)
 - **Frontend build**: `cd frontend && npm run build`
+- **Root test**: `npm test` (runs `tests/auth-test.js` — requires backend running on port 3001)
+
+### Root `package.json`
+
+There is a root `package.json` with a `postinstall` hook that runs `cd backend && npx prisma generate`. The root-level test scripts (`npm test`, `npm run test:quick`) are integration tests that require the backend to be running.
 
 ### Known Pre-existing Issues
 
