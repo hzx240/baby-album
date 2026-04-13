@@ -2,6 +2,12 @@
 
 一个全栈 TypeScript 项目，用于家庭协作记录宝宝成长照片与里程碑。
 
+## 界面预览
+
+| 首页 | 登录页 | 照片页 |
+|---|---|---|
+| ![首页预览](./docs/images/readme/home.webp) | ![登录页预览](./docs/images/readme/login.webp) | ![照片页预览](./docs/images/readme/feature.webp) |
+
 ## 项目现状（2026-04）
 
 - 架构：前后端分离（`backend` + `frontend`）。
