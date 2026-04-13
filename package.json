@@ -15,6 +15,7 @@
     "frontend": "cd frontend && npm run dev",
     "postinstall": "cd backend && npx prisma generate",
     "db:push": "cd backend && npx prisma db push",
-    "setup": "node scripts/setup-hooks.js"
+    "setup": "node scripts/setup-hooks.js",
+    "dev:no-proxy": "cross-env NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 start-server.bat"
   }
 }

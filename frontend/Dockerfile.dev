@@ -1,0 +1,42 @@
+# ========================================
+# 开发环境 Dockerfile - Frontend
+# ========================================
+# 特点：热重载、Vite 开发服务器
+
+FROM node:18-alpine
+
+# 安装开发工具
+RUN apk add --no-cache \
+    git \
+    curl \
+    bash
+
+# 创建 app 用户
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 vite-user
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制 package 文件
+COPY package*.json ./
+
+# 安装所有依赖
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install
+
+# 设置权限
+RUN chown -R vite-user:nodejs /app
+
+# 切换到非 root 用户
+USER vite-user
+
+# 暴露端口
+EXPOSE 5173
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:5173/ || exit 1
+
+# 启动 Vite 开发服务器
+CMD ["npm", "run", "dev"]

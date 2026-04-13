@@ -1,0 +1,64 @@
+# 依赖目录
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# 构建输出
+dist
+build
+*.log
+
+# 测试
+coverage
+.nyc_output
+.vitest
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# 文档
+README.md
+*.md
+docs
+
+# 测试文件
+test
+*.test.ts
+*.spec.ts
+**/__tests__/**
+**/__mocks__/**
+
+# 临时文件
+*.tmp
+.cache
+
+# 开发工具
+.eslintcache
+*.tgz
+
+# 数据库
+*.db
+*.db-shm
+*.db-wal
+prisma/migrations/*/migration.sql
+
+# Docker 相关
+Dockerfile*
+.dockerignore
+docker-compose*

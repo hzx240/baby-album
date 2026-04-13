@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Timeline | The Sentient Archive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,600;1,300;1,600&amp;family=Space+Grotesk:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-fixed": "#a6feea",
+              "tertiary": "#295fa7",
+              "tertiary-container": "#92baff",
+              "on-secondary-fixed-variant": "#007060",
+              "error-container": "#f56965",
+              "on-secondary": "#e3fff6",
+              "secondary": "#006c5d",
+              "background": "#fbf9f5",
+              "on-secondary-fixed": "#005045",
+              "on-error": "#fff7f6",
+              "error": "#ac3434",
+              "surface-container-high": "#e9e8e3",
+              "surface-variant": "#e3e3dd",
+              "secondary-fixed-dim": "#98f0dc",
+              "inverse-primary": "#fd898a",
+              "error-dim": "#70030f",
+              "primary-fixed-dim": "#ff9695",
+              "on-tertiary-container": "#00366e",
+              "surface-container": "#efeee9",
+              "surface-container-low": "#f5f3ef",
+              "surface-container-highest": "#e3e3dd",
+              "on-primary-fixed": "#540710",
+              "outline": "#7a7b76",
+              "surface-bright": "#fbf9f5",
+              "on-surface-variant": "#5e605b",
+              "tertiary-fixed": "#92baff",
+              "on-tertiary-fixed": "#002046",
+              "on-primary-fixed-variant": "#7d272b",
+              "primary-container": "#ffaba9",
+              "inverse-on-surface": "#9e9d99",
+              "primary-fixed": "#ffaba9",
+              "inverse-surface": "#0e0e0d",
+              "on-secondary-container": "#006456",
+              "primary-dim": "#8f3538",
+              "on-surface": "#31332f",
+              "on-primary-container": "#711e23",
+              "on-primary": "#fff7f6",
+              "on-tertiary-fixed-variant": "#003f7e",
+              "on-tertiary": "#f8f8ff",
+              "secondary-container": "#a6feea",
+              "on-error-container": "#65000b",
+              "surface-tint": "#9f4043",
+              "surface": "#fbf9f5",
+              "tertiary-fixed-dim": "#7dacfa",
+              "tertiary-dim": "#18539a",
+              "on-background": "#31332f",
+              "surface-dim": "#dadad4",
+              "secondary-dim": "#005e51",
+              "primary": "#9f4043",
+              "surface-container-lowest": "#ffffff",
+              "outline-variant": "#b2b2ad"
+            },
+            fontFamily: {
+              "headline": ["Noto Serif"],
+              "body": ["Space Grotesk"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .timeline-line {
+            background: linear-gradient(to bottom, transparent, #9f4043 15%, #006c5d 50%, #295fa7 85%, transparent);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-on-background min-h-screen">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-72 fixed left-0 top-0 rounded-r-[3rem] bg-rose-50/60 dark:bg-stone-900/60 backdrop-blur-xl shadow-[32px_0_64px_-12px_rgba(159,64,67,0.04)] z-50 flex flex-col py-12 px-8">
+<div class="mb-12">
+<h1 class="text-2xl font-semibold text-rose-900 dark:text-rose-100 italic font-headline">The Sentient Archive</h1>
+<p class="font-headline tracking-tight font-light text-rose-900/60 mt-1">Growth Journey</p>
+</div>
+<nav class="flex-1 space-y-6">
+<a class="flex items-center gap-4 text-rose-900 dark:text-rose-50 font-bold border-r-4 border-rose-800 dark:border-rose-300 pr-4 transition-all" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-headline">Timeline</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full p-2" href="#">
+<span class="material-symbols-outlined">child_care</span>
+<span class="font-headline">Baby Profile</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full p-2" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-headline">Smart Albums</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full p-2" href="#">
+<span class="material-symbols-outlined">family_restroom</span>
+<span class="font-headline">Family Space</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full p-2" href="#">
+<span class="material-symbols-outlined">cloud_upload</span>
+<span class="font-headline">Uploads</span>
+</a>
+</nav>
+<div class="mt-auto space-y-4 pt-8 border-t border-rose-100/20">
+<button class="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-95 transition-transform duration-300">
+                Add New Memory
+            </button>
+<div class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 text-stone-400 hover:text-rose-700 text-sm" href="#">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 text-stone-400 hover:text-rose-700 text-sm" href="#">
+<span class="material-symbols-outlined text-sm">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Component -->
+<header class="flex justify-between items-center ml-72 px-12 h-20 w-[calc(100%-18rem)] fixed top-0 z-40 bg-white/40 dark:bg-stone-950/40 backdrop-blur-md">
+<div class="flex items-center gap-8">
+<nav class="flex gap-8">
+<a class="font-body text-sm uppercase tracking-widest text-rose-900 dark:text-rose-100 font-bold border-b-2 border-rose-900 py-2" href="#">Archives</a>
+<a class="font-body text-sm uppercase tracking-widest text-stone-500 dark:text-stone-400 hover:opacity-80 transition-opacity py-2" href="#">Biometrics</a>
+<a class="font-body text-sm uppercase tracking-widest text-stone-500 dark:text-stone-400 hover:opacity-80 transition-opacity py-2" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<input class="bg-surface-container-highest border-none rounded-full px-6 py-2 text-sm w-64 focus:ring-2 focus:ring-secondary/20 transition-all outline-none" placeholder="Search archive..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-stone-400">search</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-rose-800 dark:text-rose-300 hover:opacity-80 cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-rose-800 dark:text-rose-300 hover:opacity-80 cursor-pointer">history_edu</span>
+<div class="flex items-center gap-3 ml-4 bg-surface-container-low p-1.5 rounded-full pr-4 cursor-pointer hover:bg-surface-container">
+<img alt="Guardian Profile Image" class="w-8 h-8 rounded-full object-cover" data-alt="close up portrait of a smiling woman with warm lighting and a soft natural background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbC90bYa4DhnY-YrxIj8JQ5AWl2TZ-Dk-zpFi5Dv3bmjlX8qI4ndTiJA_UWJ9RFZoeFEiOQfgDC3DeoaDqF9AoPfHYSQ0fiBMqN-H_42VXLiMZEW30R0Flx1mCWfqxXwwQ93jbCGZW5tFf2Nqn5KwBtdTlMNAS-jOKfJeGZ8jjyOQSka74QaLib4ipkn05tQYM7mIeOfdiVFQXF5m7Qa2wR1cW7FQubbFNNYBtct95Ns3A0Z-MnyhY1SH2MU0_xhFCdteA30iGHtU"/>
+<span class="text-xs font-bold uppercase tracking-tighter text-stone-600">Guardian</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-72 pt-32 px-12 pb-24 min-h-screen">
+<!-- Header & Filters Section -->
+<section class="max-w-5xl mx-auto mb-16 relative">
+<div class="absolute -top-12 -left-12 w-64 h-64 bg-primary/5 blur-3xl rounded-full"></div>
+<div class="relative flex justify-between items-end">
+<div>
+<span class="font-body text-xs uppercase tracking-[0.3em] text-secondary font-bold mb-2 block">The Life Record</span>
+<h2 class="text-6xl font-headline font-semibold text-on-background italic">Timeline</h2>
+</div>
+<div class="flex items-center gap-4 bg-surface-container-low p-2 rounded-full">
+<button class="px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-on-primary shadow-lg shadow-primary/20">All Memories</button>
+<button class="px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-variant transition-colors">Months</button>
+<button class="px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-variant transition-colors">Milestones</button>
+<button class="px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-variant transition-colors">Recent</button>
+</div>
+</div>
+</section>
+<!-- Timeline Section -->
+<section class="max-w-5xl mx-auto relative pb-20">
+<!-- Central Line -->
+<div class="absolute left-1/2 top-0 bottom-0 w-1.5 -translate-x-1/2 timeline-line opacity-20"></div>
+<div class="space-y-32">
+<!-- Timeline Entry 1 (Left Card) -->
+<div class="relative flex items-center group">
+<div class="w-1/2 pr-16 text-right">
+<div class="glass-card p-6 rounded-xl shadow-xl hover:translate-y-[-4px] transition-all duration-500 border border-white/20">
+<div class="aspect-[4/3] rounded-lg overflow-hidden mb-6 relative">
+<img alt="Baby's first smile" class="w-full h-full object-cover" data-alt="Close-up of a newborn baby in a soft knit blanket giving a gentle first smile with warm morning sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzEa1eEJacUm7mg086Q_LLjkY_1hfoQqfxiWoORIhoO83z3KvQtnyiiQFDJ5Y2xh926rEo1v7GB9mzZz4TqKEHGjunvb8o0n7gIiN2mOmE8fXHo3JEkD5LKTRwVf4mS-a0DkHcyw_UK3fOicsnzC8NeN1Ct-ibaWBvnpbv2ZJxDffaAywOTV16LpQMqZJqr4kRVeNXX4ibi9NTEGInVbZoiPzoULugBrqFmaAj9ZMT6EtVSJy8TaOkJ-iDSeAHL_IGF13nfhYZbEk"/>
+<div class="absolute top-4 right-4 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full">
+<span class="text-[10px] font-bold uppercase tracking-tighter text-primary">Day 45</span>
+</div>
+</div>
+<span class="font-body text-[10px] uppercase tracking-widest text-tertiary font-bold">April 12, 2024</span>
+<h3 class="font-headline text-2xl font-semibold text-rose-900 mt-2 mb-3 italic">The First Genuine Smile</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6 font-light">Capturing that split second where recognition turned into pure joy. A milestone that lit up the entire room.</p>
+<div class="flex items-center justify-end gap-6 border-t border-primary/5 pt-4">
+<div class="flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-lg text-rose-500" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-[10px] font-bold text-stone-500">24</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-lg text-stone-400">forum</span>
+<span class="text-[10px] font-bold text-stone-500">8</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Marker -->
+<div class="absolute left-1/2 -translate-x-1/2 flex items-center justify-center z-10">
+<div class="w-12 h-12 rounded-full glass-card border-4 border-white flex items-center justify-center shadow-lg group-hover:scale-125 transition-transform duration-500">
+<div class="w-3 h-3 rounded-full bg-primary shadow-[0_0_15px_rgba(159,64,67,0.6)]"></div>
+</div>
+</div>
+<div class="w-1/2 pl-16">
+<span class="font-headline text-4xl text-rose-100 italic opacity-40">Milestone</span>
+</div>
+</div>
+<!-- Timeline Entry 2 (Right Card) -->
+<div class="relative flex items-center group">
+<div class="w-1/2 pr-16 text-right">
+<span class="font-headline text-4xl text-secondary-dim italic opacity-20">Exploration</span>
+</div>
+<!-- Marker -->
+<div class="absolute left-1/2 -translate-x-1/2 flex items-center justify-center z-10">
+<div class="w-12 h-12 rounded-full glass-card border-4 border-white flex items-center justify-center shadow-lg group-hover:scale-125 transition-transform duration-500">
+<div class="w-3 h-3 rounded-full bg-secondary shadow-[0_0_15px_rgba(0,108,93,0.6)]"></div>
+</div>
+</div>
+<div class="w-1/2 pl-16">
+<div class="glass-card p-6 rounded-xl shadow-xl hover:translate-y-[-4px] transition-all duration-500 border border-white/20">
+<div class="aspect-[4/3] rounded-lg overflow-hidden mb-6 relative">
+<img alt="Playing in the park" class="w-full h-full object-cover" data-alt="Toddler crawling on vibrant green grass in a sun-drenched park with soft bokeh of trees in the background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCV2ciu2yx3NuIr9Lj4tsCmHXIAtP6Z8q2aZ3HSpoln7XJDinrxAwrGOUyzuD6gewxX-Ck2btUKHkCU1X9sLLuNzs_otzrbBEK4giz1-LuXkmKO1R2S0GkNFSVrxmVHdNKgcn10u8i1dQmt85U7cXx1mehIE-FzmudcdhXK3UbM0nD3ZzCrXbGqL5_BZGRmyzsbNsHbkZ1fLoTe_Lpke6hOxw9xIVMairmKeAAmKraSWVvttxkdKQKoI-BWjLqz_GY3Tr2EtB6TSy0"/>
+<div class="absolute top-4 left-4 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full">
+<span class="text-[10px] font-bold uppercase tracking-tighter text-secondary">Month 6</span>
+</div>
+</div>
+<span class="font-body text-[10px] uppercase tracking-widest text-secondary font-bold">June 08, 2024</span>
+<h3 class="font-headline text-2xl font-semibold text-on-secondary-fixed-variant mt-2 mb-3 italic">First Outdoor Picnic</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6 font-light">Feeling the texture of grass for the very first time. A sensory explosion that ended with a long nap under the oak tree.</p>
+<div class="flex items-center justify-start gap-6 border-t border-secondary/5 pt-4">
+<div class="flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-lg text-rose-500" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-[10px] font-bold text-stone-500">42</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-lg text-stone-400">forum</span>
+<span class="text-[10px] font-bold text-stone-500">15</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline Entry 3 (Left Card) -->
+<div class="relative flex items-center group">
+<div class="w-1/2 pr-16 text-right">
+<div class="glass-card p-6 rounded-xl shadow-xl hover:translate-y-[-4px] transition-all duration-500 border border-white/20">
+<div class="aspect-square rounded-lg overflow-hidden mb-6 relative">
+<img alt="Learning to sit" class="w-full h-full object-cover" data-alt="A small baby sitting upright supported by soft cream cushions in a bright airy nursery with minimalist decor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhfiz5iacQbI3VPX6v6DiFwGewO4YnAx-yXyvfOrgGH0UR1GsamkE_vdqkvWPVDtrK1gKl8TlBMJcmxb0zmgi1sl5Ec3B3dJ9b4aYmnDnmvljuxAhILsHD9xJRgiah1ilCOwpOTvaTQP-HhoKssNjsWPeird6e2Wd9LjMmmVXY0I2M-eFYBrCMt2XkeB2juc3KAhSxTtGh-UKZR8dNYlyh4-uB2VPrQpqiV8ndzos1fqISqcXXzqvg7hLuxvosPYG1NIRDQc26DD8"/>
+</div>
+<span class="font-body text-[10px] uppercase tracking-widest text-tertiary font-bold">August 22, 2024</span>
+<h3 class="font-headline text-2xl font-semibold text-tertiary-dim mt-2 mb-3 italic">Sitting Up Unaided</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6 font-light">Stability achieved! Today marked the first time the core strength held up for more than a few minutes.</p>
+<div class="flex items-center justify-end gap-6 border-t border-tertiary/5 pt-4">
+<div class="flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-lg text-rose-500" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-[10px] font-bold text-stone-500">31</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-lg text-stone-400">forum</span>
+<span class="text-[10px] font-bold text-stone-500">4</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Marker -->
+<div class="absolute left-1/2 -translate-x-1/2 flex items-center justify-center z-10">
+<div class="w-12 h-12 rounded-full glass-card border-4 border-white flex items-center justify-center shadow-lg group-hover:scale-125 transition-transform duration-500">
+<div class="w-3 h-3 rounded-full bg-tertiary shadow-[0_0_15px_rgba(41,95,167,0.6)]"></div>
+</div>
+</div>
+<div class="w-1/2 pl-16">
+<span class="font-headline text-4xl text-tertiary-fixed italic opacity-30">Strength</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Floating Action Component (Internal usage only, suppressed by logic for Top Destinations) -->
+<!-- But per prompt instructions, we'll keep the design focused on the main timeline -->
+</main>
+<!-- Footer Component -->
+<footer class="flex justify-between items-center px-12 py-8 ml-72 bg-stone-100 dark:bg-stone-900 border-t border-stone-200/20">
+<div class="flex flex-col gap-1">
+<span class="font-body text-[10px] uppercase font-bold text-teal-700 dark:text-teal-400">© 2024 The Sentient Archive | Secure Digital Heirloom</span>
+<span class="text-xs text-stone-400 italic">Encrypted Milestone Storage Active</span>
+</div>
+<div class="flex gap-10">
+<a class="font-body text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-all" href="#">Privacy Protocol</a>
+<a class="font-body text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-all" href="#">Archive Export</a>
+<a class="font-body text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-all" href="#">Family Access</a>
+</div>
+</footer>
+</body></html>

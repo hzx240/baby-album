@@ -10,6 +10,6 @@ import { FileValidationService } from '../common/file-validation.service';
   imports: [PrismaModule],
   providers: [MediaService, S3Config, QueueService, FileValidationService],
   controllers: [MediaController],
-  exports: [MediaService],
+  exports: [MediaService, S3Config, FileValidationService],
 })
 export class MediaModule {}

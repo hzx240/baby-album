@@ -24,10 +24,7 @@ async function bootstrap() {
           scriptSrc: ["'self'", "'unsafe-inline'"], // 允许内联脚本（React需要）
           styleSrc: ["'self'", "'unsafe-inline'"], // 允许内联样式
           imgSrc: ["'self'", 'data:', 'https:', 'blob:'], // 允许图片来源
-          connectSrc: [
-            "'self'",
-            process.env.CORS_ORIGIN || 'http://localhost:5173',
-          ], // API连接
+          connectSrc: ["'self'"], // API连接 - 使用 'self' 允许同源请求
           fontSrc: ["'self'", 'data:'],
           objectSrc: ["'none'"],
           mediaSrc: ["'self'", 'blob:'],
@@ -65,11 +62,33 @@ async function bootstrap() {
   // 启用 CORS
   app.enableCors({
     origin: [
+      'http://localhost:4173',
+      'http://127.0.0.1:4173',
       'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://[::1]:5173',
+      'http://localhost:8888',
+      'http://127.0.0.1:8888',
+      'http://[::1]:8888',
       'http://localhost:5174',
+      'http://127.0.0.1:5174',
       'http://localhost:5175',
-      process.env.CORS_ORIGIN
-    ].filter(Boolean),
+      'http://127.0.0.1:5175',
+      'http://localhost:5176',
+      'http://127.0.0.1:5176',
+      'http://localhost:5177',
+      'http://127.0.0.1:5177',
+      'http://localhost:5178',
+      'http://127.0.0.1:5178',
+      'http://localhost:5179',
+      'http://127.0.0.1:5179',
+      'http://localhost:5180',
+      'http://127.0.0.1:5180',
+      'http://localhost:5181',
+      'http://127.0.0.1:5181',
+      'http://localhost:5182',
+      'http://127.0.0.1:5182',
+    ],
     credentials: true,
   });
 

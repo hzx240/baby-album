@@ -1,0 +1,292 @@
+# ========================================
+# PostgreSQL Exporter 自定义查询
+# ========================================
+# 扩展默认指标收集，添加更详细的数据库监控
+
+# ========================================
+# 数据库连接统计
+# ========================================
+pg_database_connections:
+  query: |
+    SELECT
+      d.datname AS database,
+      numbackends AS connections,
+      xact_commit AS commits,
+      xact_rollback AS rollbacks,
+      blks_read AS blocks_read,
+      blks_hit AS blocks_hit,
+      tup_returned AS tuples_returned,
+      tup_fetched AS tuples_fetched,
+      tup_inserted AS tuples_inserted,
+      tup_updated AS tuples_updated,
+      tup_deleted AS tuples_deleted
+    FROM pg_stat_database d
+    JOIN pg_database db ON d.datname = db.datname
+    WHERE db.datistemplate = false
+  metrics:
+    - datname:
+        usage: "LABEL"
+        description: "Database name"
+    - connections:
+        usage: "GAUGE"
+        description: "Number of active connections"
+    - commits:
+        usage: "COUNTER"
+        description: "Number of transactions committed"
+    - rollbacks:
+        usage: "COUNTER"
+        description: "Number of transactions rolled back"
+    - blocks_read:
+        usage: "COUNTER"
+        description: "Number of disk blocks read"
+    - blocks_hit:
+        usage: "COUNTER"
+        description: "Number of disk blocks found in cache"
+    - tuples_returned:
+        usage: "COUNTER"
+        description: "Number of tuples returned"
+    - tuples_fetched:
+        usage: "COUNTER"
+        description: "Number of tuples fetched"
+    - tuples_inserted:
+        usage: "COUNTER"
+        description: "Number of tuples inserted"
+    - tuples_updated:
+        usage: "COUNTER"
+        description: "Number of tuples updated"
+    - tuples_deleted:
+        usage: "COUNTER"
+        description: "Number of tuples deleted"
+
+# ========================================
+# 表大小统计
+# ========================================
+pg_table_size:
+  query: |
+    SELECT
+      schemaname,
+      tablename,
+      pg_total_relation_size(schemaname||'.'||tablename) AS total_size,
+      pg_relation_size(schemaname||'.'||tablename) AS table_size,
+      pg_total_relation_size(schemaname||'.'||tablename) - pg_relation_size(schemaname||'.'||tablename) AS index_size,
+      n_live_tup AS live_tuples,
+      n_dead_tup AS dead_tuples,
+      last_vacuum,
+      last_autovacuum,
+      last_analyze,
+      last_autoanalyze
+    FROM pg_stat_user_tables
+  metrics:
+    - schemaname:
+        usage: "LABEL"
+        description: "Schema name"
+    - tablename:
+        usage: "LABEL"
+        description: "Table name"
+    - total_size:
+        usage: "GAUGE"
+        description: "Total size of table including indexes (bytes)"
+    - table_size:
+        usage: "GAUGE"
+        description: "Size of table only (bytes)"
+    - index_size:
+        usage: "GAUGE"
+        description: "Size of indexes (bytes)"
+    - live_tuples:
+        usage: "GAUGE"
+        description: "Number of live tuples"
+    - dead_tuples:
+        usage: "GAUGE"
+        description: "Number of dead tuples"
+    - last_vacuum:
+        usage: "GAUGE"
+        description: "Last manual vacuum timestamp"
+    - last_autovacuum:
+        usage: "GAUGE"
+        description: "Last autovacuum timestamp"
+    - last_analyze:
+        usage: "GAUGE"
+        description: "Last manual analyze timestamp"
+    - last_autoanalyze:
+        usage: "GAUGE"
+        description: "Last autoanalyze timestamp"
+
+# ========================================
+# 慢查询统计
+# ========================================
+pg_slow_queries:
+  query: |
+    SELECT
+      calls,
+      total_exec_time / 1000 AS total_time_seconds,
+      mean_exec_time / 1000 AS mean_time_seconds,
+      max_exec_time / 1000 AS max_time_seconds,
+      stddev_exec_time / 1000 AS stddev_time_seconds,
+      rows,
+      query
+    FROM pg_stat_statements
+    WHERE mean_exec_time > 1000
+    ORDER BY mean_exec_time DESC
+    LIMIT 100
+  metrics:
+    - calls:
+        usage: "COUNTER"
+        description: "Number of times executed"
+    - total_time_seconds:
+        usage: "GAUGE"
+        description: "Total time spent (seconds)"
+    - mean_time_seconds:
+        usage: "GAUGE"
+        description: "Mean execution time (seconds)"
+    - max_time_seconds:
+        usage: "GAUGE"
+        description: "Maximum execution time (seconds)"
+    - stddev_time_seconds:
+        usage: "GAUGE"
+        description: "Standard deviation of execution time (seconds)"
+    - rows:
+        usage: "GAUGE"
+        description: "Total rows affected"
+    - query:
+        usage: "LABEL"
+        description: "Query text (truncated)"
+
+# ========================================
+# 索引使用统计
+# ========================================
+pg_index_usage:
+  query: |
+    SELECT
+      schemaname,
+      tablename,
+      indexname,
+      idx_scan AS index_scans,
+      idx_tup_read AS tuples_read,
+      idx_tup_fetch AS tuples_fetched,
+      pg_relation_size(indexrelid) AS index_size
+    FROM pg_stat_user_indexes
+    ORDER BY idx_scan ASC
+  metrics:
+    - schemaname:
+        usage: "LABEL"
+        description: "Schema name"
+    - tablename:
+        usage: "LABEL"
+        description: "Table name"
+    - indexname:
+        usage: "LABEL"
+        description: "Index name"
+    - index_scans:
+        usage: "COUNTER"
+        description: "Number of index scans"
+    - tuples_read:
+        usage: "COUNTER"
+        description: "Tuples read via index"
+    - tuples_fetched:
+        usage: "COUNTER"
+        description: "Tuples fetched via index"
+    - index_size:
+        usage: "GAUGE"
+        description: "Index size in bytes"
+
+# ========================================
+# 表锁统计
+# ========================================
+pg_table_locks:
+  query: |
+    SELECT
+      nspname AS schemaname,
+      relname AS tablename,
+      mode,
+      granted,
+      COUNT(*) AS lock_count
+    FROM pg_locks l
+    JOIN pg_class c ON l.relation = c.oid
+    JOIN pg_namespace n ON c.relnamespace = n.oid
+    WHERE relname NOT LIKE 'pg_%'
+      AND relname NOT LIKE 'sql_%'
+    GROUP BY nspname, relname, mode, granted
+  metrics:
+    - schemaname:
+        usage: "LABEL"
+        description: "Schema name"
+    - tablename:
+        usage: "LABEL"
+        description: "Table name"
+    - mode:
+        usage: "LABEL"
+        description: "Lock mode"
+    - granted:
+        usage: "LABEL"
+        description: "Whether lock is granted"
+    - lock_count:
+        usage: "GAUGE"
+        description: "Number of locks"
+
+# ========================================
+# 复制延迟（如果配置了主从）
+# ========================================
+pg_replication_lag:
+  query: |
+    SELECT
+      client_addr,
+      state,
+      sync_state,
+      replay_lag
+    FROM pg_stat_replication
+  metrics:
+    - client_addr:
+        usage: "LABEL"
+        description: "Client address"
+    - state:
+        usage: "LABEL"
+        description: "Replication state"
+    - sync_state:
+        usage: "LABEL"
+        description: "Synchronous state"
+    - replay_lag:
+        usage: "GAUGE"
+        description: "Replication lag in seconds"
+
+# ========================================
+# 缓存命中率
+# ========================================
+pg_cache_hit_ratio:
+  query: |
+    SELECT
+      sum(blks_hit) / NULLIF(sum(blks_hit) + sum(blks_read), 0) * 100 AS cache_hit_ratio
+    FROM pg_stat_database
+  metrics:
+    - cache_hit_ratio:
+        usage: "GAUGE"
+        description: "Cache hit ratio percentage"
+
+# ========================================
+# 事务统计
+# ========================================
+pg_transactions:
+  query: |
+    SELECT
+      datname,
+      xact_commit AS commits,
+      xact_rollback AS rollbacks,
+      CASE
+        WHEN xact_commit + xact_rollback > 0
+        THEN xact_rollback::float / NULLIF((xact_commit + xact_rollback), 0) * 100
+        ELSE 0
+      END AS rollback_ratio
+    FROM pg_stat_database
+    WHERE datname = current_database()
+  metrics:
+    - datname:
+        usage: "LABEL"
+        description: "Database name"
+    - commits:
+        usage: "COUNTER"
+        description: "Number of committed transactions"
+    - rollbacks:
+        usage: "COUNTER"
+        description: "Number of rolled back transactions"
+    - rollback_ratio:
+        usage: "GAUGE"
+        description: "Rollback ratio percentage"

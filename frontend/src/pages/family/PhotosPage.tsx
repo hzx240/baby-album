@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, memo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, memo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useChildStore } from '@/stores/child.store';
 import { photoApi } from '@/api/photo';
@@ -90,7 +90,19 @@ export default function PhotosPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const childId = searchParams.get('childId');
-  const { children, fetchChildren } = useChildStore();
+
+  // Get store with safe defaults
+  const childStore = useChildStore();
+  const storeChildren = childStore?.children;
+
+  // Ensure children is always an array - multiple layers of safety
+  const children = React.useMemo(() => {
+    if (!storeChildren) return [];
+    if (!Array.isArray(storeChildren)) return [];
+    return storeChildren;
+  }, [storeChildren]);
+
+  const fetchChildren = childStore?.fetchChildren || (() => Promise.resolve());
 
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +115,11 @@ export default function PhotosPage() {
   const [viewerPhotos, setViewerPhotos] = useState<Array<{ id: string; url: string; uploadedAt: string; takenAt?: string | null }>>([]);
   const [uploadChildId, setUploadChildId] = useState<string | undefined>(childId || undefined);
   const [columnCount, setColumnCount] = useState(getColumnCount());
+
+  // Safety wrapper to ensure photos is always an array
+  const safePhotos = React.useMemo(() => {
+    return Array.isArray(photos) ? photos : [];
+  }, [photos]);
 
   useEffect(() => {
     fetchChildren();
@@ -127,14 +144,15 @@ export default function PhotosPage() {
         page: 1,
         limit: 100,
       });
-      setPhotos(response.data);
+      const photosData = Array.isArray(response.data) ? response.data : [];
+      setPhotos(photosData);
 
       // Batch load photo URLs - optimized to reduce API calls
-      const photoIds = response.data.map(p => p.id);
+      const photoIds = photosData.map(p => p.id);
       const thumbUrls = await photoApi.getPhotoUrlsBatch(photoIds, 'thumb');
       const originalUrls = await photoApi.getPhotoUrlsBatch(photoIds, 'original');
 
-      const viewerData = response.data.map(photo => ({
+      const viewerData = photosData.map(photo => ({
         id: photo.id,
         url: originalUrls.get(photo.id) || '',
         uploadedAt: photo.uploadedAt,
@@ -210,6 +228,7 @@ export default function PhotosPage() {
       await photoApi.completeUpload({
         key: uploadResponse.key,
         checksum,
+        contentType: selectedFile.type,
         childId: uploadChildId,
       });
 
@@ -234,7 +253,7 @@ export default function PhotosPage() {
 
     try {
       await photoApi.deletePhoto(photoId);
-      setPhotos(photos.filter((p) => p.id !== photoId));
+      setPhotos(safePhotos.filter((p) => p.id !== photoId));
       setPhotoUrls((prev) => {
         const newUrls = new Map(prev);
         newUrls.delete(photoId);
@@ -252,14 +271,18 @@ export default function PhotosPage() {
   };
 
   const handleViewerDelete = async (photoId: string) => {
-    await photoApi.deletePhoto(photoId);
-    setPhotos(photos.filter((p) => p.id !== photoId));
-    setPhotoUrls((prev) => {
-      const newUrls = new Map(prev);
-      newUrls.delete(photoId);
-      return newUrls;
-    });
-    setViewerPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    try {
+      await photoApi.deletePhoto(photoId);
+      setPhotos(prev => prev.filter((p) => p.id !== photoId));
+      setPhotoUrls((prev) => {
+        const newUrls = new Map(prev);
+        newUrls.delete(photoId);
+        return newUrls;
+      });
+      setViewerPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    } catch (err: any) {
+      setError(err.response?.data?.message || '删除失败');
+    }
   };
 
   const handleViewerDownload = async (photoId: string, url: string) => {
@@ -278,10 +301,13 @@ export default function PhotosPage() {
   };
 
   // Group photos by year-month
-  const groupPhotosByDate = (photos: Photo[]) => {
+  const groupPhotosByDate = (photos: Photo[] | undefined) => {
     const grouped: Record<string, Photo[]> = {};
 
-    photos.forEach((photo) => {
+    // Ensure photos is an array
+    const photosArray = Array.isArray(photos) ? photos : [];
+
+    photosArray.forEach((photo) => {
       const date = photo.takenAt ? new Date(photo.takenAt) : new Date(photo.uploadedAt);
       const year = date.getFullYear();
       const month = date.getMonth();
@@ -302,6 +328,7 @@ export default function PhotosPage() {
 
     return sortedKeys.map((key) => {
       const [year, month] = key.split('-').map(Number);
+      const groupPhotos = grouped[key] || [];
       return {
         key,
         year,
@@ -310,7 +337,7 @@ export default function PhotosPage() {
           year: 'numeric',
           month: 'long',
         }),
-        photos: grouped[key].sort((a, b) => {
+        photos: groupPhotos.sort((a, b) => {
           const dateA = new Date(a.takenAt || a.uploadedAt);
           const dateB = new Date(b.takenAt || b.uploadedAt);
           return dateB.getTime() - dateA.getTime();
@@ -322,9 +349,14 @@ export default function PhotosPage() {
   const selectedChild = children.find((c) => c.id === childId);
 
   // Memoize grouped photos to prevent unnecessary re-grouping
-  const groupedPhotos = useMemo(() => groupPhotosByDate(photos), [photos]);
+  const groupedPhotos = useMemo(() => groupPhotosByDate(safePhotos), [safePhotos]);
 
   if (loading) {
+    return <Loading />;
+  }
+
+  // Safety check - ensure children is defined before rendering
+  if (!children || !Array.isArray(children)) {
     return <Loading />;
   }
 
@@ -338,7 +370,7 @@ export default function PhotosPage() {
               {selectedChild ? `${selectedChild.name}的照片` : '所有照片'}
             </h1>
             <p className="text-gray-500 mt-1">
-              {photos.length > 0 ? `共 ${photos.length} 张照片` : '还没有照片'}
+              {safePhotos.length > 0 ? `共 ${safePhotos.length} 张照片` : '还没有照片'}
             </p>
           </div>
 
@@ -447,7 +479,7 @@ export default function PhotosPage() {
       {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
 
       {/* Photos Grid with Virtual Scrolling */}
-      {photos.length === 0 ? (
+      {safePhotos.length === 0 ? (
         <EmptyState
           icon="📸"
           title="还没有照片"
@@ -460,12 +492,12 @@ export default function PhotosPage() {
               {selectedChild ? `${selectedChild.name}的照片` : '所有照片'}
             </h1>
             <p className="text-gray-500 mt-1">
-              {photos.length > 0 ? `共 ${photos.length} 张照片` : '还没有照片'}
+              {safePhotos.length > 0 ? `共 ${safePhotos.length} 张照片` : '还没有照片'}
             </p>
           </div>
 
           <VirtualPhotoGrid
-            photos={photos}
+            photos={safePhotos}
             photoUrls={photoUrls}
             columnCount={columnCount}
             rowHeight={350} // card height + spacing

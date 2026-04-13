@@ -24,6 +24,8 @@ model User {
   refreshTokens  RefreshToken[]
   uploadTasks    UploadTask[]       @relation("UploadTasks")
   family         Family?            @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  photoComments  PhotoComment[]     @relation("UserPhotoComments")
+  photoCommentLikes PhotoCommentLike[] @relation("UserPhotoCommentLikes")
 
   @@index([email])
   @@index([status])
@@ -127,6 +129,7 @@ model Photo {
   photoMilestones Milestone[]      @relation("PhotoMilestones")
   faces           PhotoFace[]      @relation("PhotoFaces")
   tags            PhotoTag[]       @relation("PhotoTags")
+  comments        PhotoComment[]   @relation("PhotoComments")
   uploader        User             @relation("PhotoUploader", fields: [uploaderId], references: [id])
   child           Child?           @relation(fields: [childId], references: [id])
   family          Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -535,4 +538,42 @@ model ShareComment {
   @@index([shareLinkId, createdAt(sort: Desc)])
   @@index([parentId])
   @@map("share_comments")
+}
+
+// 照片评论模型 - 支持嵌套回复
+model PhotoComment {
+  id        String   @id @default(uuid())
+  photoId   String   @map("photo_id")
+  userId    String   @map("user_id")
+  content   String   // 评论内容
+  parentId  String? @map("parent_id") // 回复的评论ID，支持嵌套
+  likes     Int      @default(0) // 点赞数
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  photo   Photo   @relation("PhotoComments", fields: [photoId], references: [id], onDelete: Cascade)
+  user    User    @relation("UserPhotoComments", fields: [userId], references: [id], onDelete: Cascade)
+  parent  PhotoComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies PhotoComment[] @relation("CommentReplies")
+  likes2  PhotoCommentLike[] @relation("PhotoCommentLikes")
+  
+  @@index([photoId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@index([parentId])
+  @@map("photo_comments")
+}
+
+// 照片评论点赞模型
+model PhotoCommentLike {
+  id        String   @id @default(uuid())
+  commentId String   @map("comment_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  comment PhotoComment @relation("PhotoCommentLikes", fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation("UserPhotoCommentLikes", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@map("photo_comment_likes")
 }

@@ -27,9 +27,11 @@ export const useChildStore = create<ChildState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const children = await childApi.getChildren();
-      set({ children, isLoading: false });
+      // Ensure children is always an array
+      set({ children: Array.isArray(children) ? children : [], isLoading: false });
     } catch (error: any) {
       set({
+        children: [], // Ensure empty array on error
         error: error.response?.data?.message || '获取宝贝列表失败',
         isLoading: false,
       });
@@ -63,7 +65,7 @@ export const useChildStore = create<ChildState>((set) => ({
     try {
       const updatedChild = await childApi.updateChild(childId, data);
       set((state) => ({
-        children: state.children.map((c) =>
+        children: (state.children || []).map((c) =>
           c.id === childId ? updatedChild : c
         ),
         selectedChild:
@@ -86,7 +88,7 @@ export const useChildStore = create<ChildState>((set) => ({
     try {
       await childApi.deleteChild(childId);
       set((state) => ({
-        children: state.children.filter((c) => c.id !== childId),
+        children: (state.children || []).filter((c) => c.id !== childId),
         selectedChild:
           state.selectedChild?.id === childId
             ? null

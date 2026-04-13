@@ -18,7 +18,7 @@ import type { Response } from 'express';
 import { GrowthService } from './growth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import type { CreateGrowthRecordDto, UpdateGrowthRecordDto } from './growth.dto';
+import { CreateGrowthRecordDto, UpdateGrowthRecordDto } from './growth.dto';
 
 @Controller('children/:childId/growth')
 @UseGuards(JwtAuthGuard)

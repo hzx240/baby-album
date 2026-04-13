@@ -4,10 +4,9 @@ import {
   ExecutionContext,
   CallHandler,
   Logger,
-  ForbiddenException,
 } from '@nestjs/common';
-import { Observable, from, defer } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /**
@@ -18,8 +17,7 @@ import { PrismaService } from '../../prisma/prisma.service';
  *
  * This enables @CurrentUser('familyId') and @FamilyRole() decorators to work correctly.
  *
- * P0 FIX: Changed to use RxJS defer() to ensure database query completes
- * BEFORE request handlers execute. This prevents cross-family data access.
+ * Wait for family context lookup to finish before continuing the request.
  */
 @Injectable()
 export class FamilyContextInterceptor implements NestInterceptor {
@@ -36,64 +34,58 @@ export class FamilyContextInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    // CRITICAL: Use defer to ensure database query completes BEFORE request proceeds
-    // The await inside defer() guarantees familyContext is set before next.handle()
-    return defer(async () => {
-      try {
-        // Get user's family membership from database
-        const member = await this.prisma.familyMember.findUnique({
-          where: {
-            familyId_userId: {
-              familyId: user.familyId,
-              userId: user.userId,
-            },
-          },
-          include: {
-            family: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        });
+    return from(this.loadFamilyContext(request, user)).pipe(
+      switchMap(() => next.handle()),
+    );
+  }
 
-        if (!member) {
-          // User has a familyId in their profile but no membership record
-          // This shouldn't happen, but handle gracefully
-          this.logger.warn(
-            `User ${user.userId} has familyId ${user.familyId} but no membership record`,
-          );
-          request.familyContext = {
+  private async loadFamilyContext(request: any, user: any): Promise<void> {
+    try {
+      const member = await this.prisma.familyMember.findUnique({
+        where: {
+          familyId_userId: {
             familyId: user.familyId,
-            role: 'VIEWER', // Default to lowest privilege
-            familyName: null,
-          };
-        } else {
-          // Inject family context into request BEFORE resolving promise
-          request.familyContext = {
-            familyId: member.familyId,
-            role: member.role,
-            familyName: member.family.name,
-          };
+            userId: user.userId,
+          },
+        },
+        include: {
+          family: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
 
-          this.logger.debug(
-            `Injected familyContext for user ${user.userId}: familyId=${member.familyId}, role=${member.role}`,
-          );
-        }
-      } catch (error: any) {
-        this.logger.error(`Failed to load family context for user ${user.userId}:`, error);
-        // Still allow request to proceed, but with default context
+      if (!member) {
+        this.logger.warn(
+          `User ${user.userId} has familyId ${user.familyId} but no membership record`,
+        );
         request.familyContext = {
-          familyId: user.familyId || null,
+          familyId: user.familyId,
           role: 'VIEWER',
           familyName: null,
         };
+        return;
       }
 
-      // CRITICAL: AFTER database query completes and familyContext is set, call next.handle()
-      // This ensures request handlers execute AFTER familyContext is populated
-      return next.handle();
-    });
+      request.familyContext = {
+        familyId: member.familyId,
+        role: member.role,
+        familyName: member.family.name,
+      };
+
+      this.logger.debug(
+        `Injected familyContext for user ${user.userId}: familyId=${member.familyId}, role=${member.role}`,
+      );
+    } catch (error: any) {
+      this.logger.error(`Failed to load family context for user ${user.userId}:`, error);
+      request.familyContext = {
+        familyId: user.familyId || null,
+        role: 'VIEWER',
+        familyName: null,
+      };
+    }
   }
 }

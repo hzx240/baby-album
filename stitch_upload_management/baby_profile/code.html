@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Baby Profile - The Sentient Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,400;0,600;0,700;1,400&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-fixed": "#a6feea",
+              "tertiary": "#295fa7",
+              "tertiary-container": "#92baff",
+              "on-secondary-fixed-variant": "#007060",
+              "error-container": "#f56965",
+              "on-secondary": "#e3fff6",
+              "secondary": "#006c5d",
+              "background": "#fbf9f5",
+              "on-secondary-fixed": "#005045",
+              "on-error": "#fff7f6",
+              "error": "#ac3434",
+              "surface-container-high": "#e9e8e3",
+              "surface-variant": "#e3e3dd",
+              "secondary-fixed-dim": "#98f0dc",
+              "inverse-primary": "#fd898a",
+              "error-dim": "#70030f",
+              "primary-fixed-dim": "#ff9695",
+              "on-tertiary-container": "#00366e",
+              "surface-container": "#efeee9",
+              "surface-container-low": "#f5f3ef",
+              "surface-container-highest": "#e3e3dd",
+              "on-primary-fixed": "#540710",
+              "outline": "#7a7b76",
+              "surface-bright": "#fbf9f5",
+              "on-surface-variant": "#5e605b",
+              "tertiary-fixed": "#92baff",
+              "on-tertiary-fixed": "#002046",
+              "on-primary-fixed-variant": "#7d272b",
+              "primary-container": "#ffaba9",
+              "inverse-on-surface": "#9e9d99",
+              "primary-fixed": "#ffaba9",
+              "inverse-surface": "#0e0e0d",
+              "on-secondary-container": "#006456",
+              "primary-dim": "#8f3538",
+              "on-surface": "#31332f",
+              "on-primary-container": "#711e23",
+              "on-primary": "#fff7f6",
+              "on-tertiary-fixed-variant": "#003f7e",
+              "on-tertiary": "#f8f8ff",
+              "secondary-container": "#a6feea",
+              "on-error-container": "#65000b",
+              "surface-tint": "#9f4043",
+              "surface": "#fbf9f5",
+              "tertiary-fixed-dim": "#7dacfa",
+              "tertiary-dim": "#18539a",
+              "on-background": "#31332f",
+              "surface-dim": "#dadad4",
+              "secondary-dim": "#005e51",
+              "primary": "#9f4043",
+              "surface-container-lowest": "#ffffff",
+              "outline-variant": "#b2b2ad"
+            },
+            fontFamily: {
+              "headline": ["Noto Serif"],
+              "body": ["Space Grotesk"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .font-notoSerif { font-family: 'Noto Serif', serif; }
+        .font-spaceGrotesk { font-family: 'Space Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-72 fixed left-0 top-0 rounded-r-[3rem] bg-rose-50/60 dark:bg-stone-900/60 backdrop-blur-xl flex flex-col h-full py-12 px-8 py-10 shadow-[32px_0_64px_-12px_rgba(159,64,67,0.04)] z-50">
+<div class="mb-12">
+<h1 class="text-2xl font-semibold text-rose-900 dark:text-rose-100 italic font-notoSerif">The Sentient Archive</h1>
+<p class="font-notoSerif tracking-tight font-light text-rose-900/60 text-sm">Growth Journey</p>
+</div>
+<nav class="flex-1 space-y-6">
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors group" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-notoSerif tracking-tight font-light">Timeline</span>
+</a>
+<!-- Active Tab: Baby Profile -->
+<a class="flex items-center gap-4 text-rose-900 dark:text-rose-50 font-bold border-r-4 border-rose-800 dark:border-rose-300 pr-4 transition-all group" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">child_care</span>
+<span class="font-notoSerif tracking-tight">Baby Profile</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors group" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-notoSerif tracking-tight font-light">Smart Albums</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors group" href="#">
+<span class="material-symbols-outlined">family_restroom</span>
+<span class="font-notoSerif tracking-tight font-light">Family Space</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors group" href="#">
+<span class="material-symbols-outlined">cloud_upload</span>
+<span class="font-notoSerif tracking-tight font-light">Uploads</span>
+</a>
+</nav>
+<div class="mt-auto space-y-4 pt-10">
+<button class="w-full py-4 px-6 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full font-spaceGrotesk text-sm font-bold shadow-lg shadow-primary/10 hover:scale-[0.98] transition-transform">
+                Add New Memory
+            </button>
+<div class="flex gap-4 pt-4">
+<span class="material-symbols-outlined text-stone-400 hover:text-rose-700 cursor-pointer">settings</span>
+<span class="material-symbols-outlined text-stone-400 hover:text-rose-700 cursor-pointer">help_outline</span>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="flex justify-between items-center ml-72 px-12 h-20 w-[calc(100%-18rem)] bg-white/40 dark:bg-stone-950/40 backdrop-blur-md sticky top-0 z-40">
+<div class="flex items-center gap-8">
+<div class="relative">
+<input class="bg-surface-container-highest border-none rounded-full px-6 py-2 w-64 text-xs font-spaceGrotesk focus:ring-2 focus:ring-secondary/20 placeholder:text-stone-400" placeholder="Search milestones..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 text-sm">search</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="font-spaceGrotesk text-[10px] uppercase tracking-widest text-rose-800 dark:text-rose-300 font-bold hover:opacity-80 transition-opacity">Quick Upload</button>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-secondary-container overflow-hidden ring-2 ring-white ring-offset-2 ring-offset-background">
+<img class="w-full h-full object-cover" data-alt="Guardian Profile Image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXfpKRX7CmxuudkMZ9cxDW6jdTUUEMYo5WwIlw4tcvq5kOSeEb6hJ82V8GK3HMApNVeU_9tJ79qRuK6t6KgRDmc6HDLSx4QDQIGwkknW5xXUnpwhQfW1oYX0qoftugb5Q5elrJn23Cw5lK2uwDlBrIGEna8Hq3QQ-OFmotcl04t-NN9KAfr5--86San_Kc7rfayM8n5uRXDiDpyTb_z_wUqTvllG-QevrP_t1j86kkwBANw7jOssI7xom58CSHfKIZxpvQYHON5lQ"/>
+</div>
+<span class="font-spaceGrotesk text-[10px] uppercase tracking-widest text-stone-500 group-hover:text-rose-800 transition-colors">Baby Switcher</span>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-stone-400 cursor-pointer hover:text-primary transition-colors">notifications</span>
+<span class="material-symbols-outlined text-stone-400 cursor-pointer hover:text-primary transition-colors">history_edu</span>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-72 p-12 space-y-12">
+<!-- Hero Section: The Sentient Portrait -->
+<section class="grid grid-cols-12 gap-8 items-end">
+<div class="col-span-12 md:col-span-5 relative">
+<div class="aspect-[4/5] rounded-xl overflow-hidden shadow-2xl relative z-10">
+<img class="w-full h-full object-cover" data-alt="close-up portrait of a laughing baby with soft natural morning light, neutral tones, high detail skin texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABbl7c7w56Vth7jVBHYypwfr2FeZwjL-0mvEO65V7lNymChdyblVxyAcd5G5rLa2DXCTDCYu3mpMZPr0712mg3GYLK5wywm6QHtJKUgL6-wmtQbY_TnFoblk39atS8UZMY1iafN_R3aHfIfh2cpABH6QSl8PMln6MtmgTf6tqvZzO2waeusgZuNSI3ikCkcY5_fCQ806CQ4vr0QKVrerRjyC3qv5VAL5iw4TVKj6li-5ANW2-n6qm_f7qLPgStS87cigMc34bwfhI"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+</div>
+<div class="absolute -bottom-6 -right-6 w-32 h-32 bg-secondary/10 rounded-full blur-3xl"></div>
+<div class="absolute -top-6 -left-6 w-48 h-48 bg-primary/10 rounded-full blur-3xl"></div>
+</div>
+<div class="col-span-12 md:col-span-7 pb-8">
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<span class="font-spaceGrotesk text-xs font-bold uppercase tracking-[0.2em] text-secondary bg-secondary-container/30 px-3 py-1 rounded-full">Active Profile</span>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-stone-500">
+<span class="material-symbols-outlined text-lg">edit_note</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-stone-500">
+<span class="material-symbols-outlined text-lg">share</span>
+</button>
+</div>
+</div>
+<h2 class="text-7xl font-notoSerif font-bold text-on-surface tracking-tight">Little Leo</h2>
+<div class="flex items-baseline gap-6">
+<p class="font-notoSerif text-3xl italic text-primary">14 Months Old</p>
+<div class="flex flex-col">
+<span class="font-spaceGrotesk text-[10px] uppercase tracking-widest text-stone-400">Birthday</span>
+<span class="font-spaceGrotesk font-bold text-stone-700">June 12, 2023</span>
+</div>
+</div>
+<div class="pt-8 flex gap-4">
+<button class="bg-gradient-to-r from-primary to-primary-container px-8 py-3 rounded-full text-white font-spaceGrotesk font-bold text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-transform">Edit Profile</button>
+<button class="bg-surface-container-highest px-8 py-3 rounded-full text-on-surface font-spaceGrotesk font-bold text-sm hover:bg-surface-variant transition-colors">Share to Family</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Growth Metrics: Technological Precision -->
+<section class="space-y-6">
+<div class="flex justify-between items-end">
+<h3 class="font-notoSerif text-3xl font-light">Growth Analytics</h3>
+<span class="font-spaceGrotesk text-[10px] font-bold text-stone-400 uppercase tracking-widest">Last Updated: 2 Hours Ago</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Weight Card -->
+<div class="bg-surface-container-lowest p-8 rounded-lg shadow-sm border border-outline-variant/5">
+<div class="flex justify-between items-start mb-8">
+<div>
+<p class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 tracking-widest">Current Weight</p>
+<h4 class="font-notoSerif text-4xl font-bold text-secondary">10.2 <span class="text-lg font-light text-stone-400">kg</span></h4>
+</div>
+<span class="bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold px-2 py-1 rounded-sm">+0.4kg since last month</span>
+</div>
+<div class="h-40 flex items-end gap-2 px-2">
+<!-- Mock Chart bars -->
+<div class="flex-1 bg-secondary/5 rounded-t-lg h-[40%] transition-all hover:bg-secondary/20"></div>
+<div class="flex-1 bg-secondary/5 rounded-t-lg h-[45%] transition-all hover:bg-secondary/20"></div>
+<div class="flex-1 bg-secondary/5 rounded-t-lg h-[55%] transition-all hover:bg-secondary/20"></div>
+<div class="flex-1 bg-secondary/10 rounded-t-lg h-[65%] transition-all hover:bg-secondary/30"></div>
+<div class="flex-1 bg-secondary/15 rounded-t-lg h-[75%] transition-all hover:bg-secondary/40"></div>
+<div class="flex-1 bg-secondary/20 rounded-t-lg h-[85%] transition-all hover:bg-secondary/50"></div>
+<div class="flex-1 bg-secondary/30 rounded-t-lg h-[100%] transition-all hover:bg-secondary/60"></div>
+</div>
+</div>
+<!-- Height Card -->
+<div class="bg-surface-container-lowest p-8 rounded-lg shadow-sm border border-outline-variant/5">
+<div class="flex justify-between items-start mb-8">
+<div>
+<p class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 tracking-widest">Current Height</p>
+<h4 class="font-notoSerif text-4xl font-bold text-tertiary">78.5 <span class="text-lg font-light text-stone-400">cm</span></h4>
+</div>
+<span class="bg-tertiary-container/30 text-on-tertiary-container text-[10px] font-bold px-2 py-1 rounded-sm">92nd Percentile</span>
+</div>
+<div class="relative h-40 w-full overflow-hidden rounded-lg">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 40">
+<path class="text-tertiary" d="M0,40 Q20,35 40,30 T80,15 T100,5" fill="none" stroke="currentColor" stroke-width="2"></path>
+<circle class="text-tertiary fill-current" cx="100" cy="5" r="3"></circle>
+<circle class="text-tertiary/20 fill-current" cx="100" cy="5" r="6"></circle>
+</svg>
+<div class="absolute bottom-0 left-0 w-full h-px bg-stone-100"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Milestone Board: Editorial Bento Grid -->
+<section class="space-y-6">
+<div class="flex justify-between items-center">
+<h3 class="font-notoSerif text-3xl font-light">The Milestone Board</h3>
+<button class="text-xs font-spaceGrotesk font-bold uppercase text-stone-400 hover:text-primary transition-colors flex items-center gap-2">
+                    View Full Archive <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Large Milestone -->
+<div class="md:col-span-2 relative group overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+<img class="w-full h-96 object-cover group-hover:scale-105 transition-transform duration-700" data-alt="toddler taking shaky first steps on a warm wooden floor towards parents hands, sunbeams entering from a window" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvgTEQbXdSpd7hdD0FiuBbuA6S1HAopiaWxEDydrCOIkMpFEzqnXvN7mKHZ4P_XdkywOGP9RWpwcoV84_lBInvUMRreEcaPX9o2npV1vqOn0Sq7U1xTUDJ7j4eDKGQSqN0CwidgJQPKtIqaUWj8_bVD2AxmZrdGKnPJRWOGtL7bh53ctJgkv2N2DyM3JrpsDt3qnCu34nEZz3fPpeNfwy0yD8jpRLTFV1bGz4OMug2CHkF8-yGO2oEQe6B1jo2Yu8KAfMRbPBP8ZY"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+<span class="font-spaceGrotesk text-[10px] font-bold text-primary-fixed bg-primary-dim/40 backdrop-blur-md px-3 py-1 rounded-full w-fit mb-4">Core Memory</span>
+<h4 class="font-notoSerif text-4xl font-bold text-white mb-2">First Steps</h4>
+<div class="flex items-center gap-4">
+<p class="text-white/80 font-spaceGrotesk text-sm">August 14, 2024</p>
+<span class="w-1 h-1 bg-white/30 rounded-full"></span>
+<span class="material-symbols-outlined text-white text-lg">directions_walk</span>
+</div>
+</div>
+</div>
+<!-- Secondary Milestones Stack -->
+<div class="space-y-6">
+<!-- Milestone 2 -->
+<div class="bg-surface-container-low p-6 rounded-xl flex items-center gap-6 group hover:bg-surface-container-high transition-colors">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="baby sitting up straight on a white fluffy carpet, laughing and looking at camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsyNYOYMZyXAQ-5vlyj71aDMCa3WYd5G9N63FIlkGXq1qMjmrqXVwK_U5MT3IynwE5gSImKa-88xlyLCrQZiBlygsNfq3wntAWyVbKVRS0APtTx1AXcDqeD-7BrUbXjCh0-k7WK3OTz9GTybpr5nfCdaFJMxshPJE1WAt8GwTI0xu2WwcVfzMJSnEARk3KgvbY2bH_W3UAI4vDvMBOLETpz8OKzDRpfjh4xj4hSiXoKvqfIyDz8mPu4wualF-VMWcuuDYX6yaLDKc"/>
+</div>
+<div>
+<h5 class="font-notoSerif font-bold text-xl text-on-surface">Sitting Up</h5>
+<p class="font-spaceGrotesk text-xs text-stone-500 mb-1">Feb 20, 2024</p>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">event_available</span>
+<span class="font-spaceGrotesk text-[10px] font-bold uppercase">Logged</span>
+</div>
+</div>
+</div>
+<!-- Milestone 3 -->
+<div class="bg-surface-container-low p-6 rounded-xl flex items-center gap-6 group hover:bg-surface-container-high transition-colors">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-tertiary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl text-tertiary">record_voice_over</span>
+</div>
+<div>
+<h5 class="font-notoSerif font-bold text-xl text-on-surface">First Word</h5>
+<p class="font-spaceGrotesk text-xs text-stone-500 mb-1">May 03, 2024</p>
+<p class="font-notoSerif italic text-stone-600 text-sm">"Mama"</p>
+</div>
+</div>
+<!-- Add New Milestone CTA -->
+<div class="border-2 border-dashed border-outline-variant/30 p-6 rounded-xl flex flex-col items-center justify-center gap-3 hover:border-primary/40 cursor-pointer group transition-all">
+<span class="material-symbols-outlined text-stone-300 group-hover:text-primary transition-colors text-3xl">add_circle</span>
+<p class="font-spaceGrotesk text-[10px] font-bold uppercase text-stone-400 tracking-widest group-hover:text-primary">Record Achievement</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats Grid: Floating Data Points -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-lg text-center border border-outline-variant/10">
+<p class="font-spaceGrotesk text-[10px] font-bold uppercase text-stone-400 tracking-widest mb-2">Total Memories</p>
+<p class="font-notoSerif text-3xl font-bold">1,482</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg text-center border border-outline-variant/10">
+<p class="font-spaceGrotesk text-[10px] font-bold uppercase text-stone-400 tracking-widest mb-2">Days Alive</p>
+<p class="font-notoSerif text-3xl font-bold">428</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg text-center border border-outline-variant/10">
+<p class="font-spaceGrotesk text-[10px] font-bold uppercase text-stone-400 tracking-widest mb-2">Sleep Avg</p>
+<p class="font-notoSerif text-3xl font-bold text-secondary">11.4h</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg text-center border border-outline-variant/10">
+<p class="font-spaceGrotesk text-[10px] font-bold uppercase text-stone-400 tracking-widest mb-2">Active Family</p>
+<p class="font-notoSerif text-3xl font-bold text-primary">6 Members</p>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="flex justify-between items-center px-12 py-4 w-[calc(100%-18rem)] ml-72 bg-stone-100 dark:bg-stone-900 mt-20">
+<div class="text-[10px] text-stone-400 font-spaceGrotesk uppercase font-bold">© 2024 The Sentient Archive | Secure Digital Heirloom</div>
+<div class="flex gap-8">
+<a class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-colors" href="#">Privacy Protocol</a>
+<a class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-colors" href="#">Archive Export</a>
+<a class="font-spaceGrotesk text-[10px] uppercase font-bold text-stone-400 hover:text-teal-500 transition-colors" href="#">Family Access</a>
+</div>
+</footer>
+</body></html>

@@ -34,6 +34,8 @@ export default function AcceptInvitePage() {
   }, [token]);
 
   const validateInvitation = async () => {
+    if (!token) return;
+
     try {
       setIsValidating(true);
       const data = await familyInvitationsApi.validateInvitation(token);

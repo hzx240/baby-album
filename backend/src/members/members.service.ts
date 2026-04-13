@@ -261,4 +261,23 @@ export class FamilyMembersService {
       joinedAt: member.joinedAt,
     };
   }
+
+  /**
+   * Validate that a user is a member of a family
+   * @throws NotFoundException if user is not a member
+   */
+  async validateFamilyMember(userId: string, familyId: string): Promise<void> {
+    const member = await this.prisma.familyMember.findUnique({
+      where: {
+        familyId_userId: {
+          familyId,
+          userId,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('您不是该家庭的成员');
+    }
+  }
 }

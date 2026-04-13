@@ -2,12 +2,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { MediaModule } from './media/media.module';
+import { BatchUploadModule } from './batch-upload/batch-upload.module';
 import { UsersModule } from './users/users.module';
 import { ChildrenModule } from './children/children.module';
 import { FamilyMembersModule } from './members/members.module';
@@ -25,12 +27,15 @@ import { CsrfModule } from './csrf/csrf.module';
 import { CsrfGuard } from './common/guards/csrf.guard';
 import { GrowthModule } from './growth/growth.module';
 import { MilestoneReminderModule } from './milestone-reminder/milestone-reminder.module';
+import { CommentsModule } from './comments/comments.module';
+import { ShareModule } from './share/share.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: parseInt(process.env.THROTTLE_TTL || '60', 10) * 1000,
@@ -40,6 +45,7 @@ import { MilestoneReminderModule } from './milestone-reminder/milestone-reminder
     PrismaModule,
     AuthModule,
     MediaModule,
+    BatchUploadModule,
     UsersModule,
     ChildrenModule,
     FamilyMembersModule,
@@ -52,6 +58,8 @@ import { MilestoneReminderModule } from './milestone-reminder/milestone-reminder
     CsrfModule,
     GrowthModule,
     MilestoneReminderModule,
+    CommentsModule,
+    ShareModule,
   ],
   controllers: [AppController],
   providers: [

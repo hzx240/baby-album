@@ -5,14 +5,16 @@ import Redis, { Redis as RedisClass } from 'ioredis';
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
-  private client: RedisClass;
+  private client?: RedisClass;
   private readonly defaultTTL = 3600; // 1 hour in seconds
+  private fallbackMode = false;
+  private connectionWarningLogged = false;
 
   constructor(private configService: ConfigService) {
     const redisUrl = this.configService.get('REDIS_URL');
 
     if (!redisUrl) {
-      this.logger.warn('REDIS_URL not configured, using in-memory fallback');
+      this.enableFallback('REDIS_URL not configured, using in-memory fallback');
       return;
     }
 
@@ -20,9 +22,10 @@ export class RedisService implements OnModuleDestroy {
       // Parse Redis URL: redis://[:password@]host:port/db
       this.client = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
+        enableOfflineQueue: false,
         retryStrategy: (times: number) => {
           if (times > 3) {
-            this.logger.error('Redis connection failed after 3 retries');
+            this.enableFallback('Redis connection failed after 3 retries, disabling cache');
             return null;
           }
           return Math.min(times * 100, 3000);
@@ -30,14 +33,33 @@ export class RedisService implements OnModuleDestroy {
       });
 
       this.client.on('connect', () => {
+        this.fallbackMode = false;
+        this.connectionWarningLogged = false;
         this.logger.log('Redis connected successfully');
       });
 
       this.client.on('error', (err: Error) => {
-        this.logger.error('Redis connection error:', err);
+        if (!this.connectionWarningLogged) {
+          this.connectionWarningLogged = true;
+          this.logger.warn(`Redis unavailable, falling back to no-cache mode: ${err.message}`);
+        }
       });
     } catch (error) {
-      this.logger.error('Failed to initialize Redis:', error);
+      const message = error instanceof Error ? error.message : 'Unknown Redis initialization error';
+      this.enableFallback(`Failed to initialize Redis: ${message}`);
+    }
+  }
+
+  private enableFallback(message: string) {
+    if (!this.fallbackMode) {
+      this.logger.warn(message);
+    }
+    this.fallbackMode = true;
+    this.connectionWarningLogged = true;
+
+    if (this.client) {
+      this.client.disconnect(false);
+      this.client = undefined;
     }
   }
 
@@ -45,8 +67,7 @@ export class RedisService implements OnModuleDestroy {
    * Set a key-value pair with optional TTL
    */
   async set(key: string, value: any, ttl?: number): Promise<void> {
-    if (!this.client) {
-      this.logger.warn('Redis not available, skipping cache set');
+    if (!this.client || this.fallbackMode) {
       return;
     }
 
@@ -65,7 +86,7 @@ export class RedisService implements OnModuleDestroy {
    * Get a value by key
    */
   async get<T = any>(key: string): Promise<T | null> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return null;
     }
 
@@ -89,7 +110,7 @@ export class RedisService implements OnModuleDestroy {
    * Delete a key
    */
   async del(key: string): Promise<void> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return;
     }
 
@@ -105,7 +126,7 @@ export class RedisService implements OnModuleDestroy {
    * Check if a key exists
    */
   async exists(key: string): Promise<boolean> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return false;
     }
 
@@ -122,7 +143,7 @@ export class RedisService implements OnModuleDestroy {
    * Set multiple key-value pairs
    */
   async mset(keyValuePairs: Record<string, any>, ttl?: number): Promise<void> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return;
     }
 
@@ -146,7 +167,7 @@ export class RedisService implements OnModuleDestroy {
    * Get multiple values by keys
    */
   async mget<T = any>(keys: string[]): Promise<(T | null)[]> {
-    if (!this.client || keys.length === 0) {
+    if (!this.client || this.fallbackMode || keys.length === 0) {
       return keys.map(() => null);
     }
 
@@ -171,7 +192,7 @@ export class RedisService implements OnModuleDestroy {
    * Delete multiple keys
    */
   async delPattern(pattern: string): Promise<void> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return;
     }
 
@@ -191,7 +212,7 @@ export class RedisService implements OnModuleDestroy {
    * Increment a counter
    */
   async incr(key: string, increment: number = 1): Promise<number> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return 0;
     }
 
@@ -209,7 +230,7 @@ export class RedisService implements OnModuleDestroy {
    * Get TTL of a key
    */
   async ttl(key: string): Promise<number> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return -1;
     }
 
@@ -225,7 +246,7 @@ export class RedisService implements OnModuleDestroy {
    * Flush all cache (use with caution!)
    */
   async flush(): Promise<void> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return;
     }
 
@@ -245,7 +266,7 @@ export class RedisService implements OnModuleDestroy {
     keyCount: number;
     memoryUsage: string;
   }> {
-    if (!this.client) {
+    if (!this.client || this.fallbackMode) {
       return {
         connected: false,
         keyCount: 0,

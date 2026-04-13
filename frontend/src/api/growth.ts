@@ -32,9 +32,10 @@ export async function createGrowthRecord(
   childId: string,
   data: CreateGrowthRecordRequest
 ): Promise<GrowthRecord> {
+  const { childId: _unused, ...body } = data;
   const response = await api.post<GrowthRecord>(
     `/api/children/${childId}/growth`,
-    data
+    body
   );
   return response.data;
 }

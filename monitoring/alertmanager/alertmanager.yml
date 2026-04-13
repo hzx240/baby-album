@@ -1,0 +1,138 @@
+# ========================================
+# Alertmanager 配置文件
+# ========================================
+
+global:
+  resolve_timeout: 5m
+  # SMTP 配置（用于邮件告警）
+  smtp_smarthost: '${SMTP_SMARTHOST:-smtp.gmail.com:587}'
+  smtp_from: '${SMTP_FROM:-alertmanager@babyalbum.com}'
+  smtp_auth_username: '${SMTP_AUTH_USERNAME:-your-email@gmail.com}'
+  smtp_auth_password: '${SMTP_AUTH_PASSWORD:-your-app-password}'
+  smtp_require_tls: true
+
+# 告警路由配置
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default-receiver'
+  routes:
+    # 关键告警 - 立即发送
+    - match:
+        severity: critical
+      receiver: 'critical-receiver'
+      group_wait: 10s
+      repeat_interval: 5m
+
+    # 警告级别 - 每30分钟重复
+    - match:
+        severity: warning
+      receiver: 'warning-receiver'
+      group_wait: 5m
+      repeat_interval: 30m
+
+    # 信息级别 - 每天汇总
+    - match:
+        severity: info
+      receiver: 'info-receiver'
+      group_wait: 1h
+      repeat_interval: 24h
+
+# 接收器配置
+receivers:
+  # 默认接收器
+  - name: 'default-receiver'
+    email_configs:
+      - to: '${TEAM_EMAIL:-team@babyalbum.com}'
+        headers:
+          Subject: '[Baby Album] 告警通知'
+        html: |
+          {{ range .Alerts }}
+          <h2>{{ .Labels.alertname }}</h2>
+          <p><strong>严重程度:</strong> {{ .Labels.severity }}</p>
+          <p><strong>服务:</strong> {{ .Labels.service }}</p>
+          <p><strong>主机:</strong> {{ .Labels.instance }}</p>
+          <p><strong>描述:</strong> {{ .Annotations.description }}</p>
+          <p><strong>开始时间:</strong> {{ .StartsAt }}</p>
+          <hr>
+          {{ end }}
+
+  # 关键告警接收器
+  - name: 'critical-receiver'
+    email_configs:
+      - to: '${ONCALL_EMAIL:-oncall@babyalbum.com}'
+        headers:
+          Subject: '[CRITICAL] 立即处理 - Baby Album'
+        html: |
+          <h1 style="color: red;">🚨 关键告警</h1>
+          {{ range .Alerts }}
+          <h2>{{ .Labels.alertname }}</h2>
+          <p><strong>严重程度:</strong> <span style="color: red;">{{ .Labels.severity }}</span></p>
+          <p><strong>服务:</strong> {{ .Labels.service }}</p>
+          <p><strong>主机:</strong> {{ .Labels.instance }}</p>
+          <p><strong>描述:</strong> {{ .Annotations.description }}</p>
+          <p><strong>开始时间:</strong> {{ .StartsAt }}</p>
+          <p><strong>摘要:</strong> {{ .Annotations.summary }}</p>
+          <hr>
+          {{ end }}
+    # 钉钉告警（需要配置 Webhook）
+    # webhook_configs:
+    #   - url: '${DINGTALK_WEBHOOK_URL}'
+    #     send_resolved: true
+    # 企业微信告警
+    # webhook_configs:
+    #   - url: '${WECHAT_WEBHOOK_URL}'
+    #     send_resolved: true
+
+  # 警告接收器
+  - name: 'warning-receiver'
+    email_configs:
+      - to: '${DEVOPS_EMAIL:-devops@babyalbum.com}'
+        headers:
+          Subject: '[WARNING] 需要关注 - Baby Album'
+        html: |
+          <h2 style="color: orange;">⚠️ 警告告警</h2>
+          {{ range .Alerts }}
+          <h3>{{ .Labels.alertname }}</h3>
+          <p><strong>严重程度:</strong> <span style="color: orange;">{{ .Labels.severity }}</span></p>
+          <p><strong>服务:</strong> {{ .Labels.service }}</p>
+          <p><strong>描述:</strong> {{ .Annotations.description }}</p>
+          <p><strong>开始时间:</strong> {{ .StartsAt }}</p>
+          <hr>
+          {{ end }}
+
+  # 信息接收器
+  - name: 'info-receiver'
+    email_configs:
+      - to: '${TEAM_EMAIL:-team@babyalbum.com}'
+        headers:
+          Subject: '[INFO] Baby Album 信息'
+        html: |
+          <h3>ℹ️ 信息汇总</h3>
+          {{ range .Alerts }}
+          <p><strong>{{ .Labels.alertname }}</strong>: {{ .Annotations.description }}</p>
+          {{ end }}
+
+# 告警抑制规则
+inhibit_rules:
+  # 如果服务宕机，抑制该服务的所有其他告警
+  - source_match:
+      severity: 'critical'
+      alertname: 'BackendServiceDown'
+    target_match_re:
+      alertname: '.*'
+      service: 'backend'
+    equal: ['service', 'instance']
+
+  # 如果是关键告警，抑制同一资源的警告
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['service', 'instance']
+
+# 模板配置
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

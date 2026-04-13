@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Upload &amp; Management | The Sentient Archive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,600;1,300;1,600&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        h1, h2, h3, .serif-font {
+            font-family: 'Noto Serif', serif;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#a6feea",
+                        "tertiary": "#295fa7",
+                        "tertiary-container": "#92baff",
+                        "on-secondary-fixed-variant": "#007060",
+                        "error-container": "#f56965",
+                        "on-secondary": "#e3fff6",
+                        "secondary": "#006c5d",
+                        "background": "#fbf9f5",
+                        "on-secondary-fixed": "#005045",
+                        "on-error": "#fff7f6",
+                        "error": "#ac3434",
+                        "surface-container-high": "#e9e8e3",
+                        "surface-variant": "#e3e3dd",
+                        "secondary-fixed-dim": "#98f0dc",
+                        "inverse-primary": "#fd898a",
+                        "error-dim": "#70030f",
+                        "primary-fixed-dim": "#ff9695",
+                        "on-tertiary-container": "#00366e",
+                        "surface-container": "#efeee9",
+                        "surface-container-low": "#f5f3ef",
+                        "surface-container-highest": "#e3e3dd",
+                        "on-primary-fixed": "#540710",
+                        "outline": "#7a7b76",
+                        "surface-bright": "#fbf9f5",
+                        "on-surface-variant": "#5e605b",
+                        "tertiary-fixed": "#92baff",
+                        "on-tertiary-fixed": "#002046",
+                        "on-primary-fixed-variant": "#7d272b",
+                        "primary-container": "#ffaba9",
+                        "inverse-on-surface": "#9e9d99",
+                        "primary-fixed": "#ffaba9",
+                        "inverse-surface": "#0e0e0d",
+                        "on-secondary-container": "#006456",
+                        "primary-dim": "#8f3538",
+                        "on-surface": "#31332f",
+                        "on-primary-container": "#711e23",
+                        "on-primary": "#fff7f6",
+                        "on-tertiary-fixed-variant": "#003f7e",
+                        "on-tertiary": "#f8f8ff",
+                        "secondary-container": "#a6feea",
+                        "on-error-container": "#65000b",
+                        "surface-tint": "#9f4043",
+                        "surface": "#fbf9f5",
+                        "tertiary-fixed-dim": "#7dacfa",
+                        "tertiary-dim": "#18539a",
+                        "on-background": "#31332f",
+                        "surface-dim": "#dadad4",
+                        "secondary-dim": "#005e51",
+                        "primary": "#9f4043",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#b2b2ad"
+                    },
+                    fontFamily: {
+                        "headline": ["Noto Serif"],
+                        "body": ["Space Grotesk"],
+                        "label": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- SideNavBar -->
+<aside class="h-screen w-72 fixed left-0 top-0 rounded-r-[3rem] bg-rose-50/60 dark:bg-stone-900/60 backdrop-blur-xl flex flex-col h-full py-12 px-8 py-10 shadow-[32px_0_64px_-12px_rgba(159,64,67,0.04)] z-50">
+<div class="mb-12">
+<h1 class="text-2xl font-semibold text-rose-900 dark:text-rose-100 italic">The Sentient Archive</h1>
+<p class="font-notoSerif tracking-tight font-light text-stone-500 mt-1">Growth Journey</p>
+</div>
+<nav class="flex-grow space-y-4">
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span>Timeline</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full" href="#">
+<span class="material-symbols-outlined">child_care</span>
+<span>Baby Profile</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span>Smart Albums</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 text-stone-500 dark:text-stone-400 font-medium hover:text-rose-700 transition-colors hover:bg-rose-100/40 dark:hover:bg-stone-800/40 rounded-full" href="#">
+<span class="material-symbols-outlined">family_restroom</span>
+<span>Family Space</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 text-rose-900 dark:text-rose-50 font-bold border-r-4 border-rose-800 dark:border-rose-300 pr-4 transition-all hover:bg-rose-100/40 rounded-full" href="#">
+<span class="material-symbols-outlined">cloud_upload</span>
+<span>Uploads</span>
+</a>
+</nav>
+<div class="mt-auto space-y-2 pt-8 border-t border-rose-100/20">
+<a class="flex items-center gap-4 py-2 px-4 text-stone-400 hover:text-rose-700 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-xs uppercase tracking-widest font-bold">Settings</span>
+</a>
+<a class="flex items-center gap-4 py-2 px-4 text-stone-400 hover:text-rose-700 transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="text-xs uppercase tracking-widest font-bold">Support</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="flex justify-between items-center ml-72 px-12 h-20 w-[calc(100%-18rem)] bg-white/40 dark:bg-stone-950/40 backdrop-blur-md docked full-width top-0 sticky z-40">
+<div class="flex items-center gap-8">
+<span class="font-spaceGrotesk text-sm uppercase tracking-widest text-rose-800 dark:text-rose-300 font-bold border-b-2 border-rose-900">Archive Manager</span>
+<div class="relative">
+<input class="bg-surface-container-highest border-none rounded-full py-2 px-6 text-xs font-bold tracking-widest focus:ring-2 focus:ring-secondary/20 w-64" placeholder="SEARCH ARCHIVE..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-2 text-stone-400 text-sm">search</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="material-symbols-outlined text-rose-800 hover:opacity-80 transition-opacity">notifications</button>
+<button class="material-symbols-outlined text-rose-800 hover:opacity-80 transition-opacity">history_edu</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant/30"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">Guardian</p>
+<p class="text-xs font-bold text-rose-900">Baby Switcher</p>
+</div>
+<img class="w-10 h-10 rounded-full object-cover shadow-sm" data-alt="portrait of a gentle woman with soft natural lighting and a warm beige studio background, minimalist and high-end aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC47zTaTd-qAck-ESLID1RlrFp43QG01uF2JeteFwma1yhJcXYGi2BzEMruGryD0H-tnGXbTm0FdFHht4Mlum8pyFvwbYwZIcjuiudth4N-EhQlwNU7zP8ffiZ01ZxzlkUyfMcsCDEEaPmoxwlGS59qh7KVNmAOodXrylrqwql12MpY0kGqpuXDuZkQyOZtQOidBMln9citji2BgdXBfy7eK63pcqHorc-B723bijYkjrUBjQ251OIw5wFhF91iJwnkVcaStPLlXDM"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-72 p-12 min-h-[calc(100vh-5rem)]">
+<div class="grid grid-cols-12 gap-8">
+<!-- Hero Upload Section -->
+<section class="col-span-12 lg:col-span-8 space-y-8">
+<div>
+<h2 class="text-4xl font-headline font-light text-on-surface mb-2">Preserve a Moment</h2>
+<p class="font-body text-on-surface-variant max-w-xl">Every pixel captured today is a legacy for tomorrow. Drag your high-fidelity memories into the archive below.</p>
+</div>
+<div class="relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+<div class="relative h-96 bg-surface-container-lowest rounded-xl border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 text-center group-hover:border-primary/50 transition-all duration-500">
+<div class="w-24 h-24 bg-primary-container/20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">cloud_upload</span>
+</div>
+<h3 class="text-2xl font-headline italic text-on-surface mb-4">Release files to ingest</h3>
+<p class="text-sm text-on-surface-variant font-body tracking-wide mb-8">RAW, HEIC, MP4, and JPG supported (Max 2GB per file)</p>
+<button class="px-8 py-3 bg-gradient-to-r from-primary to-primary-dim text-white rounded-full font-body font-bold text-sm uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+                            Select from vault
+                        </button>
+</div>
+</div>
+<!-- Recently Uploaded List -->
+<div class="bg-surface-container-low rounded-xl p-8 space-y-6">
+<div class="flex justify-between items-end mb-4">
+<h3 class="text-xl font-headline">Recent Ingestions</h3>
+<span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">3 Items Processing</span>
+</div>
+<div class="space-y-4">
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center gap-6 group">
+<div class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="close-up of tiny newborn baby hands reaching for a soft white blanket, high contrast black and white artistic photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVvQBN5-BktMDVd9m34hwBzAqDAXaHtKoHi6khc2pSybd-9YqgrStl5QL3Tv8LjTuhxBkEy6aA147jCyPi_Aj9lNBkIGD1zVeF2oYmG87K0Pqd9f8pRqZDNzpAKwolP_40az6bSH2Mm3qkj4BONJIQUgvxivoFF9DZSLtSXXebLnh1DmqfPY60CVt9NevHh3HBVCjLQ-mpDvJPvW3lRH0THF5f6f3eel7Jt4uIzlEgExpSpZlrOpjZojvldocw472npPi81AiyMPI"/>
+<div class="absolute inset-0 bg-secondary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm">check_circle</span>
+</div>
+</div>
+<div class="flex-grow grid grid-cols-4 gap-4">
+<div class="col-span-2">
+<h4 class="text-sm font-bold text-on-surface truncate">First_Steps_LivingRoom_001.raw</h4>
+<div class="mt-2 w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-full"></div>
+</div>
+</div>
+<div class="flex flex-col justify-center">
+<span class="text-[10px] font-bold text-stone-400 uppercase">Tags</span>
+<span class="text-xs text-on-surface">#milestone #home</span>
+</div>
+<div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-container rounded-full"><span class="material-symbols-outlined text-stone-400">edit_note</span></button>
+<button class="p-2 hover:bg-rose-50 text-error rounded-full"><span class="material-symbols-outlined">delete</span></button>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center gap-6 group">
+<div class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-sm">
+<img class="w-full h-full object-cover opacity-60" data-alt="aesthetic shot of wooden baby blocks scattered on a neutral toned rug, soft morning sunlight creating long shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAvse0U0yDDQrkjObIzs4VMxcK9QMnlQVmw5HydhAiv3Eo4gx2vruD50JjYUO0ZQECbxw42VNuGoG9YBhDgLAIdpjv3PAwNBMcTFeAzkYSk0MXudstAwgTfnN-kk1OkgfCpIKQsMDDtUV-vD3aYuP-rGKJ4mCakFKn77xf8uZRqzSm_HHOq9b-0JznhatIQ3oulUeOJGkaNB8ei85K6gPlpRze3Q3cNkYNjM4ODPy2v69f1dpB_lSs2gt-Dv9QM-01Cg1TZXIP0mU"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-[10px] font-bold text-on-surface">64%</span>
+</div>
+</div>
+<div class="flex-grow grid grid-cols-4 gap-4">
+<div class="col-span-2">
+<h4 class="text-sm font-bold text-on-surface truncate">Nap_Time_Afternoon.mov</h4>
+<div class="mt-2 w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[64%]"></div>
+</div>
+</div>
+<div class="flex flex-col justify-center">
+<span class="text-[10px] font-bold text-stone-400 uppercase">Location</span>
+<span class="text-xs text-on-surface">Nursery Room</span>
+</div>
+<div class="flex items-center justify-end gap-3">
+<span class="material-symbols-outlined text-stone-300 animate-spin">refresh</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Sidebar Stats & Controls -->
+<section class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Storage Stats Card -->
+<div class="bg-white rounded-xl p-8 shadow-sm">
+<h3 class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-8">Storage Utilization</h3>
+<div class="flex flex-col items-center">
+<div class="relative w-48 h-48 mb-8">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-low" cx="96" cy="96" fill="transparent" r="80" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-tertiary" cx="96" cy="96" fill="transparent" r="80" stroke="currentColor" stroke-dasharray="502.6" stroke-dashoffset="470" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-4xl font-headline text-on-surface">5.2%</span>
+<span class="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">of 50GB vault</span>
+</div>
+</div>
+<div class="w-full space-y-4">
+<div class="flex justify-between items-center text-xs">
+<span class="text-on-surface-variant">Photos (1.8GB)</span>
+<span class="font-bold text-tertiary">72%</span>
+</div>
+<div class="flex justify-between items-center text-xs">
+<span class="text-on-surface-variant">Videos (0.7GB)</span>
+<span class="font-bold text-secondary">28%</span>
+</div>
+<button class="w-full mt-4 py-3 rounded-full border border-outline-variant/30 text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors">Expand Vault</button>
+</div>
+</div>
+</div>
+<!-- Privacy Toggles -->
+<div class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
+<h3 class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-6">Security &amp; Privacy</h3>
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-on-surface">Family Distribution</p>
+<p class="text-[10px] text-on-surface-variant">Visible to verified relatives</p>
+</div>
+<div class="relative w-12 h-6 bg-secondary rounded-full flex items-center px-1">
+<div class="w-4 h-4 bg-white rounded-full ml-auto shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-on-surface">Guardian Only</p>
+<p class="text-[10px] text-on-surface-variant">Hidden from all external users</p>
+</div>
+<div class="relative w-12 h-6 bg-surface-container-high rounded-full flex items-center px-1">
+<div class="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-on-surface">Biometric Archive</p>
+<p class="text-[10px] text-on-surface-variant">Encrypted with FaceID</p>
+</div>
+<div class="relative w-12 h-6 bg-secondary rounded-full flex items-center px-1">
+<div class="w-4 h-4 bg-white rounded-full ml-auto shadow-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Tips -->
+<div class="bg-tertiary text-white rounded-xl p-8 overflow-hidden relative group">
+<div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<h3 class="font-headline italic text-lg mb-2">Smart Curating</h3>
+<p class="text-xs font-body opacity-80 leading-relaxed mb-4">Our AI automatically filters blurry shots and organizes memories by emotion. You just focus on the upload.</p>
+<a class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2" href="#">Learn more <span class="material-symbols-outlined text-xs">arrow_forward</span></a>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="flex justify-between items-center px-12 py-4 w-[calc(100%-18rem)] ml-72 bg-stone-100 dark:bg-stone-900 docked full-width bottom-0 text-teal-700 dark:text-teal-400 font-spaceGrotesk text-[10px] uppercase font-bold">
+<div class="text-stone-400">© 2024 THE SENTIENT ARCHIVE | SECURE DIGITAL HEIRLOOM</div>
+<div class="flex gap-8">
+<a class="text-stone-400 hover:text-teal-500 transition-all duration-500" href="#">Privacy Protocol</a>
+<a class="text-stone-400 hover:text-teal-500 transition-all duration-500" href="#">Archive Export</a>
+<a class="text-stone-400 hover:text-teal-500 transition-all duration-500" href="#">Family Access</a>
+</div>
+</footer>
+</body></html>

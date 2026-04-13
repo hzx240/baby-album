@@ -2,8 +2,8 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Patch, UseGuards } fro
 import { MilestoneReminderService } from './milestone-reminder.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import type { CreateMilestoneReminderDto } from './dto/create-milestone-reminder.dto';
-import type { UpdateMilestoneReminderDto } from './dto/update-milestone-reminder.dto';
+import { CreateMilestoneReminderDto } from './dto/create-milestone-reminder.dto';
+import { UpdateMilestoneReminderDto } from './dto/update-milestone-reminder.dto';
 
 @Controller('children/:childId/milestone-reminders')
 @UseGuards(JwtAuthGuard)

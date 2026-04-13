@@ -281,7 +281,7 @@ export class GrowthService {
     ageMonths: number,
   ): { p3: number; p15: number; p50: number; p85: number; p97: number } {
     // Load WHO standards data
-    const dataPath = path.join(__dirname, 'data', 'who-standards.json');
+    const dataPath = path.join(process.cwd(), 'src', 'growth', 'data', 'who-standards.json');
     const rawData = fs.readFileSync(dataPath, 'utf-8');
     const whoData = JSON.parse(rawData);
 

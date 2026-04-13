@@ -1,5 +1,5 @@
-import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
 import { memo } from 'react';
+import { Grid } from 'react-window';
 import type { Photo } from '@/types';
 
 interface VirtualPhotoGridProps {
@@ -69,27 +69,6 @@ const PhotoCard = memo(({
 
 PhotoCard.displayName = 'PhotoCard';
 
-const Cell = memo(({ columnIndex, rowIndex, style, data }: GridChildComponentProps) => {
-  const { photos, photoUrls, columnCount, onPhotoClick, onPhotoDelete } = data;
-  const index = rowIndex * columnCount + columnIndex;
-  const photo = photos[index];
-
-  if (!photo) return null;
-
-  return (
-    <div style={style}>
-      <PhotoCard
-        photo={photo}
-        photoUrl={photoUrls.get(photo.id)}
-        onClick={() => onPhotoClick(index)}
-        onDelete={onPhotoDelete}
-      />
-    </div>
-  );
-});
-
-Cell.displayName = 'Cell';
-
 export default function VirtualPhotoGrid({
   photos,
   photoUrls,
@@ -98,20 +77,38 @@ export default function VirtualPhotoGrid({
   onPhotoClick,
   onPhotoDelete,
 }: VirtualPhotoGridProps) {
-  const containerWidth = typeof window !== 'undefined' ? window.innerWidth - 32 : 1200; // 32px padding
+  const containerWidth = typeof window !== 'undefined' ? window.innerWidth - 32 : 1200;
   const columnWidth = containerWidth / columnCount;
+
+  const Cell = ({ columnIndex, rowIndex, style }: any) => {
+    const index = rowIndex * columnCount + columnIndex;
+    const photo = photos[index];
+
+    if (!photo) return null;
+
+    return (
+      <div style={style}>
+        <PhotoCard
+          photo={photo}
+          photoUrl={photoUrls.get(photo.id)}
+          onClick={() => onPhotoClick(index)}
+          onDelete={onPhotoDelete}
+        />
+      </div>
+    );
+  };
 
   return (
     <Grid
       className="w-full"
       columnCount={columnCount}
       columnWidth={columnWidth}
-      height={600} // viewport height, can be made dynamic
+      defaultHeight={600}
       rowCount={Math.ceil(photos.length / columnCount)}
       rowHeight={rowHeight}
-      width={containerWidth}
-      itemData={{ photos, photoUrls, columnCount, onPhotoClick, onPhotoDelete }}
-      children={Cell}
+      defaultWidth={containerWidth}
+      cellComponent={Cell}
+      cellProps={{}}
     />
   );
 }

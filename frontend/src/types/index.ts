@@ -20,6 +20,7 @@ export interface PaginatedResponse<T> {
     limit: number;
     totalPages: number;
   };
+  total?: number; // Legacy support for old API responses
 }
 
 // Auth Types
@@ -200,6 +201,7 @@ export interface RequestUploadResponse {
 export interface CompleteUploadRequest {
   key: string;
   checksum: string;
+  contentType: string;
   childId?: string;
   takenAt?: string;
   description?: string;
@@ -267,7 +269,7 @@ export interface CreateAlbumRequest {
   description?: string;
   coverPhotoId?: string;
   isSmart?: boolean;
-  smartRules?: string;
+  smartRules?: SmartRule[];
   sortOrder?: number;
 }
 
@@ -276,12 +278,14 @@ export interface UpdateAlbumRequest {
   description?: string;
   coverPhotoId?: string;
   sortOrder?: number;
+  smartRules?: SmartRule[];
 }
 
 export interface QueryAlbumsParams {
   page?: number;
   limit?: number;
   isSmart?: boolean;
+  childId?: string;
   includePhotoCount?: boolean;
   includeSmart?: boolean;  // Phase 2: Added for smart album filtering
   sortBy?: 'createdAt' | 'sortOrder' | 'photoCount';
@@ -387,6 +391,8 @@ export interface ImportantDate {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  daysUntilNext?: number; // Computed field from backend
+  nextDate?: string; // Computed next occurrence date for recurring dates
 }
 
 export interface CreateImportantDateRequest {
@@ -421,6 +427,14 @@ export interface TimelineResponse {
   milestones: Milestone[];
   importantDates: ImportantDate[];
   stats: TimelineStats;
+  months?: TimelineMonth[]; // Optional grouped by month view
+}
+
+export interface TimelineMonth {
+  year: number;
+  month: number;
+  photos: Photo[];
+  milestones: Milestone[];
 }
 
 export interface QueryTimelineParams {
